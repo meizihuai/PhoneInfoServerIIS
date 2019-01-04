@@ -22,6 +22,7 @@ Imports System.Reflection
 Imports System.IO.Compression
 
 Public Class HTTPHandle
+    Private test As String = "123"
     Structure TtLTECellInfo '铁塔工参
         Dim carrier As String
         Dim province As String 'PROVINCE
@@ -257,7 +258,7 @@ Public Class HTTPHandle
         Dim Stepp As Integer = -1
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
-            Stepp =0
+            Stepp = 0
             Try
                 Dim lteCellInfoList As List(Of LTECellInfo) = JsonConvert.DeserializeObject(str, GetType(List(Of LTECellInfo)))
                 If IsNothing(lteCellInfoList) Then
