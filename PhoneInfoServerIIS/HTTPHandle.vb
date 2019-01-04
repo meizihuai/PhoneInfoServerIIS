@@ -22,7 +22,7 @@ Imports System.Reflection
 Imports System.IO.Compression
 
 Public Class HTTPHandle
-    Private test As String = "123"
+    Private test As String = "456"
     Structure TtLTECellInfo '铁塔工参
         Dim carrier As String
         Dim province As String 'PROVINCE
