@@ -395,6 +395,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
+
     Public Function Handle_UploadPhoneInfo(context As HttpContext, data As Object) As NormalResponse 'Android app上传SDK
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -1270,7 +1271,6 @@ Public Class HTTPHandle
         Else
             Score = (1 + Score) / 2
         End If
-
         Return Score
     End Function
 
@@ -3235,5 +3235,15 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    Public Function Handle_GetQOEVideoSource(context As HttpContext) As NormalResponse
+        Try
+            Dim sql As String = "select * from QOE_VIDEO_SOURCE where isuse=1"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return New NormalResponse(False, "dt is null")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "dt.rows.count=0")
+            Return New NormalResponse(True, "", "", dt)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
 End Class
