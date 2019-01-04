@@ -23,6 +23,7 @@ Imports System.IO.Compression
 
 Public Class HTTPHandle
     Private test As String = "abc"
+    Private test1 As String = "test1"
     Structure TtLTECellInfo '铁塔工参
         Dim carrier As String
         Dim province As String 'PROVINCE
