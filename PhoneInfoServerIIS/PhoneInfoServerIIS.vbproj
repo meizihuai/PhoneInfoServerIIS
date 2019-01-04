@@ -60,26 +60,26 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ConvertGPS">
-      <HintPath>..\..\..\..\..\ConvertGPS.dll</HintPath>
+      <HintPath>..\..\PhoneInfoServerIISOld\PhoneInfoServerIIS\bin\ConvertGPS.dll</HintPath>
     </Reference>
     <Reference Include="EPPlus">
-      <HintPath>..\..\..\..\..\EPPlus.dll</HintPath>
+      <HintPath>..\..\PhoneInfoServerIISOld\PhoneInfoServerIIS\bin\EPPlus.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Security">
-      <HintPath>..\..\..\..\..\Mono.Security.dll</HintPath>
+      <HintPath>..\..\PhoneInfoServerIISOld\PhoneInfoServerIIS\bin\Mono.Security.dll</HintPath>
     </Reference>
     <Reference Include="MySql.Data">
       <HintPath>..\..\..\..\..\dlls\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\..\PhoneInfoServerIISOld\PhoneInfoServerIIS\bin\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql">
-      <HintPath>..\..\..\..\..\Npgsql.dll</HintPath>
+      <HintPath>..\..\PhoneInfoServerIISOld\PhoneInfoServerIIS\bin\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="Oracle.ManagedDataAccess">
-      <HintPath>..\..\..\..\..\Oracle.ManagedDataAccess.dll</HintPath>
+      <HintPath>..\..\PhoneInfoServerIISOld\PhoneInfoServerIIS\bin\Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
