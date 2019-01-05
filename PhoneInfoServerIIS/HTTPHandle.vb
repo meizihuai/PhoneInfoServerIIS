@@ -22,8 +22,26 @@ Imports System.Reflection
 Imports System.IO.Compression
 
 Public Class HTTPHandle
-    Private test As String = "abc"
-    Private test1 As String = "test1"
+    Structure DtInfo
+
+        Dim province As String
+        Dim city As String
+        Dim groupId As String
+        Dim line As String
+        Dim name_cm As String
+        Dim imei_cm As String
+        Dim phone_cm As String
+        Dim name_cu As String
+        Dim imei_cu As String
+        Dim phone_cu As String
+        Dim name_ct As String
+        Dim imei_ct As String
+        Dim phone_ct As String
+        Dim modified_datetime As String
+        Dim modified_by As String
+        Dim demo As String
+
+    End Structure
     Structure TtLTECellInfo '铁塔工参
         Dim carrier As String
         Dim province As String 'PROVINCE
@@ -174,6 +192,7 @@ Public Class HTTPHandle
         Dim apkVersion As String
         Dim apkName As String
     End Structure
+
     ''设置web.config  System.Web.Configuration.WebConfigurationManager.AppSettings.Set("name", "name2");
     ''读取web.config  string name = System.Web.Configuration.WebConfigurationManager.AppSettings["name"];
     Public Function Handle_Test(ByVal context As HttpContext) As NormalResponse '测试
@@ -190,7 +209,119 @@ Public Class HTTPHandle
         Dim sql As String = System.Web.Configuration.WebConfigurationManager.AppSettings(configName)
         Return New NormalResponse(True, "", "", sql)
     End Function
-    Public Function Handle_UploadTtLTECellInfo(context As HttpContext, data As Object) As NormalResponse '保存铁塔Lte工参
+
+
+    Public Function Handle_GetDtGroup(ByVal context As HttpContext) As NormalResponse '获取所有测试组信息 ,如果groupId不为空，则读取该组信息
+        Dim Stepp As Single = 0
+        Try
+
+            Dim carrier As String = context.Request.QueryString("carrier") '运营商 {'中国联通','中国移动','中国电信'}
+            Dim province As String = context.Request.QueryString("province")
+            Dim city As String = context.Request.QueryString("city")
+            Dim groupId As String = context.Request.QueryString("groupId")
+            'Stepp = 1
+            'If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
+            'If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
+
+            Dim sql As String = "select groupId,line,name_cm,imei_cm,phone_cm,name_cu,imei_cu,phone_cu,name_ct,imei_ct,phone_ct from Dt_Group "
+
+            If groupId <> "" Then sql = sql & " where groupId='" & groupId & "'"
+            'If province <> "" Then sql = sql & " and province='" & province & "'"
+            'If city <> "" Then sql = sql & " and city='" & city & "'"
+
+            Stepp = 3
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then
+                Return New NormalResponse(False, "没有任何数据", sql, "")
+            End If
+            If dt.Rows.Count = 0 Then
+                Return New NormalResponse(False, "没有任何数据", sql, "")
+            End If
+            Stepp = 4
+            ' "select province,city,district,netType,GDlon,GDlat,RSRP,time,SINR,eNodeBId,CellId from SDKTABLE"
+            'Carrier,province,city,district,netType,GDlon,GDlat,RSRP,time,SINR
+            dt.Columns(0).ColumnName = "groupId"            ' dt.Columns(1).ColumnName = "carrier"
+            dt.Columns(1).ColumnName = "line"
+            dt.Columns(2).ColumnName = "name_cm"
+            dt.Columns(3).ColumnName = "imei_cm"
+            dt.Columns(4).ColumnName = "phone_cm"
+            dt.Columns(5).ColumnName = "name_cu"
+            dt.Columns(6).ColumnName = "imei_cu"
+            dt.Columns(7).ColumnName = "phone_cu"
+            dt.Columns(8).ColumnName = "name_ct"
+            dt.Columns(9).ColumnName = "imei_ct"
+            dt.Columns(10).ColumnName = "phone_ct"
+
+            'Stepp = 5
+            Return New NormalResponse(True, "", "", dt)
+        Catch ex As Exception
+            Return New NormalResponse(False, "GetDtGroup Err:" & ex.Message & ",Step=" & Stepp)
+        End Try
+    End Function
+
+    Public Function Handle_UploadDtGroup(context As HttpContext, data As Object) As NormalResponse '保存DTGroup
+        Dim Stepp As Integer = -1
+        Try
+            Dim str As String = JsonConvert.SerializeObject(data)
+            Stepp = 0
+            Try
+                Dim DtList As List(Of DtInfo) = JsonConvert.DeserializeObject(str, GetType(List(Of DtInfo)))
+                If IsNothing(DtList) Then
+                    Return New NormalResponse(False, "DtList is null")
+                End If
+                If DtList.Count = 0 Then
+                    Return New NormalResponse(False, "DtList count =0")
+                End If
+                Stepp = 1
+                Dim colList() As String = GetOraTableColumns("Dt_Group")
+                Dim dt As New DataTable
+                For Each col In colList
+                    If col <> "ID" Then
+                        dt.Columns.Add(col)
+                    End If
+                Next
+                Stepp = 2
+                For Each itm In DtList
+                    Dim row As DataRow = dt.NewRow
+                    row("province".ToUpper) = itm.province
+                    row("city".ToUpper) = itm.city
+                    row("groupId".ToUpper) = itm.groupId
+                    row("line".ToUpper) = itm.line
+                    row("name_cm".ToUpper) = itm.name_cm
+                    row("imei_cm".ToUpper) = itm.imei_cm
+                    row("phone_cm".ToUpper) = itm.phone_cm
+                    row("name_cu".ToUpper) = itm.name_cu
+                    row("imei_cu".ToUpper) = itm.imei_cu
+                    row("phone_cu".ToUpper) = itm.phone_cu
+                    row("name_ct".ToUpper) = itm.name_ct
+                    row("imei_ct".ToUpper) = itm.imei_ct
+                    row("phone_ct".ToUpper) = itm.phone_ct
+                    row("modified_datetime".ToUpper) = itm.modified_datetime
+                    row("modified_by".ToUpper) = itm.modified_by
+                    row("demo".ToUpper) = itm.demo
+
+                    dt.Rows.Add(row)
+                Next
+                Stepp = 20
+                Dim result As String = ORALocalhost.SqlCMDListQuickByPara("Dt_Group", dt)
+                If result = "success" Then 'true
+                    Dim np As New NormalResponse(True, "Dt_Group success,Row=" & dt.Rows.Count, "", "")
+                    Return np
+
+                Else
+                    Dim np As New NormalResponse(False, result & " step=" & Stepp, "", "")
+                    Return np
+
+                End If
+            Catch ex As Exception
+                Return New NormalResponse(False, "Dt_Group json格式非法,Step=" & Stepp & " err=" & ex.ToString)
+            End Try
+        Catch ex As Exception
+            Return New NormalResponse(False, "Upload Dt_Group Err Step=" & Stepp & " " & ex.ToString)
+        End Try
+    End Function
+
+    Public Function Handle_UploadTtLteCellInfo(context As HttpContext, data As Object) As NormalResponse '保存铁塔Lte工参
         Dim Stepp As Integer = -1
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -204,7 +335,7 @@ Public Class HTTPHandle
                     Return New NormalResponse(False, "TtlteCellInfoList count =0")
                 End If
                 Stepp = 1
-                Dim colList() As String = GetOraTableColumns("TtLTE_CELINFO_Table")
+                Dim colList() As String = GetOraTableColumns("TtLte_CellInfo_Table")
                 Dim dt As New DataTable
                 For Each col In colList
                     If col <> "ID" Then
@@ -237,11 +368,11 @@ Public Class HTTPHandle
                     dt.Rows.Add(row)
                 Next
                 Stepp = 20
-                Dim result As String = ORALocalhost.SqlCMDListQuickByPara("TtLTE_CELINFO_Table", dt)
+                Dim result As String = ORALocalhost.SqlCMDListQuickByPara("TtLte_CellInfo_Table", dt)
                 If result = "success" Then 'true
-
                     Dim np As New NormalResponse(True, "success,Row=" & dt.Rows.Count, "", "")
                     Return np
+
                 Else
                     Dim np As New NormalResponse(False, result & " step=" & Stepp, "", "")
                     Return np
@@ -251,11 +382,11 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "TtlteCellInfoList json格式非法,Step=" & Stepp & " err=" & ex.ToString)
             End Try
         Catch ex As Exception
-            Return New NormalResponse(False, "UploadTtLteCellInfo Err Step=" & Stepp & " " & ex.ToString)
+            Return New NormalResponse(False, "Upload TtLteCellInfo Err Step=" & Stepp & " " & ex.ToString)
         End Try
     End Function
 
-    Public Function Handle_UploadLTECellInfo(context As HttpContext, data As Object) As NormalResponse '保存运营商Lte工参
+    Public Function Handle_UploadLteCellInfo(context As HttpContext, data As Object) As NormalResponse '保存运营商Lte工参
         Dim Stepp As Integer = -1
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -269,7 +400,7 @@ Public Class HTTPHandle
                     Return New NormalResponse(False, "lteCellInfoList count =0")
                 End If
                 Stepp = 1
-                Dim colList() As String = GetOraTableColumns("LTE_CELINFO_Table")
+                Dim colList() As String = GetOraTableColumns("Lte_CellInfo_Table")
                 Dim dt As New DataTable
                 For Each col In colList
                     If col <> "ID" Then
@@ -306,7 +437,7 @@ Public Class HTTPHandle
                     dt.Rows.Add(row)
                 Next
 
-                Dim result As String = ORALocalhost.SqlCMDListQuickByPara("LTE_CELINFO_Table", dt)
+                Dim result As String = ORALocalhost.SqlCMDListQuickByPara("Lte_CellInfo_Table", dt)
                 If result = "success" Then 'truesuccess
 
                     Dim np As New NormalResponse(True, "success,Row=" & dt.Rows.Count, "", "")
@@ -320,7 +451,7 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "lteCellInfoList json格式非法,Step=" & Stepp & " err=" & ex.ToString)
             End Try
         Catch ex As Exception
-            Return New NormalResponse(False, "Step=" & Stepp & " " & ex.ToString)
+            Return New NormalResponse(False, "UploadLTECellInfoErr,Step=" & Stepp & " Err=" & ex.ToString)
         End Try
     End Function
     Structure LocalTestInfo
@@ -1748,62 +1879,18 @@ Public Class HTTPHandle
             Dim readIndex As Integer = context.Request.QueryString("readIndex")
             Dim readCount As Integer = context.Request.QueryString("readCount")
             'Stepp = 1
+            If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
+            If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
 
-            If carrier = "" Then
-                Return New NormalResponse(False, "必须选择运营商")
-                ' Return New NormalResponse(False, "必须选择省份")carrier,
-            End If
-            If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then
-                Return New NormalResponse(False, "运营商错误")
-                ' Return New NormalResponse(False, "必须选择省份")carrier,
-            End If
             Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid from QOE_REPORT_TABLE "
-            Dim doHaveWhere As Boolean = False
-            If province <> "" Then
-                sql = sql & " where province='" & province & "'"
-                doHaveWhere = True
-            End If
-            If carrier <> "" Then
-                If doHaveWhere Then
-                    sql = sql & " and carrier='" & carrier & "'"
-                Else
-                    sql = sql & " where carrier='" & carrier & "'"
-                    doHaveWhere = True
-                End If
-            End If
-            If city <> "" Then
-                If doHaveWhere Then
-                    sql = sql & " and city='" & city & "'"
-                Else
-                    sql = sql & " where city='" & city & "'"
-                    doHaveWhere = True
-                End If
-            End If
-            If district <> "" Then
-                If doHaveWhere Then
-                    sql = sql & " and district='" & district & "'"
-                Else
-                    sql = sql & " where district='" & district & "'"
-                    doHaveWhere = True
-                End If
-            End If
-            If netType <> "" Then
-                If doHaveWhere Then
-                    sql = sql & " and netType='" & netType & "'"
-                Else
-                    sql = sql & " where netType='" & netType & "'"
-                    doHaveWhere = True
-                End If
-            End If
 
-            If grid <> "" Then
-                If doHaveWhere Then
-                    sql = sql & " and grid='" & grid & "'"
-                Else
-                    sql = sql & " where grid='" & grid & "'"
-                    doHaveWhere = True
-                End If
-            End If
+            sql = sql & " where carrier='" & carrier & "'"
+            If province <> "" Then sql = sql & " and province='" & province & "'"
+            If city <> "" Then sql = sql & " and city='" & city & "'"
+            If district <> "" Then sql = sql & " and district='" & district & "'"
+            If netType <> "" Then sql = sql & " and netType='" & netType & "'"
+            If grid <> "" Then sql = sql & " and grid='" & grid & "'"
+
 
             If startTime <> "" Then
                 If endTime <> "" Then
@@ -1812,12 +1899,8 @@ Public Class HTTPHandle
                         startTime = d.ToString("yyyy-MM-dd HH:mm:ss")
                         d = Date.Parse(endTime)
                         endTime = d.ToString("yyyy-MM-dd HH:mm:ss")
-                        If doHaveWhere Then
-                            sql = sql & " and datetime>='" & startTime & "' and datetime<='" & endTime & "'"
-                        Else
-                            sql = sql & " where datetime>='" & startTime & "' and datetime<='" & endTime & "'"
-                            doHaveWhere = True
-                        End If
+                        sql = sql & " and datetime>='" & startTime & "' and datetime<='" & endTime & "'"
+
                     Catch ex As Exception
                         Return New NormalResponse(False, "起始时间或结束时间格式非法")
                     End Try
@@ -1849,8 +1932,7 @@ Public Class HTTPHandle
             Stepp = 4
             ' "select province,city,district,netType,GDlon,GDlat,RSRP,time,SINR,eNodeBId,CellId from SDKTABLE"
             'Carrier,province,city,district,netType,GDlon,GDlat,RSRP,time,SINR
-            dt.Columns(0).ColumnName = "datetime"
-            ' dt.Columns(1).ColumnName = "carrier"
+            dt.Columns(0).ColumnName = "datetime"            ' dt.Columns(1).ColumnName = "carrier"
             dt.Columns(1).ColumnName = "province"
             dt.Columns(2).ColumnName = "city"
             dt.Columns(3).ColumnName = "district"
@@ -1889,47 +1971,19 @@ Public Class HTTPHandle
             Dim readCount As Integer = context.Request.QueryString("readCount")
             'Stepp = 1
 
-            If imei = "" Then
-                Return New NormalResponse(False, "必须选择imei")
-                ' Return New NormalResponse(False, "必须选择imei")
-            End If
-            If carrier = "" Then
-                Return New NormalResponse(False, "必须选择运营商")
-            End If
-            If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then
-                Return New NormalResponse(False, "运营商错误")
-                ' Return New NormalResponse(False, "必须选择省份")carrier,
-            End If
-            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid from QOE_REPORT_TABLE "
-            Dim doHaveWhere As Boolean = False
-            'If province <> "" Then
-            '    sql = sql & " where province='" & province & "'"
-            '    doHaveWhere = True
-            'End If
+            If imei = "" Then Return New NormalResponse(False, "必须选择imei")
+            If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
+
+            If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
+
+            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId from QOE_REPORT_TABLE "
+
             sql = sql & " where imei='" & imei & "'"
-            doHaveWhere = True
+            If carrier <> "" Then sql = sql & " and carrier='" & carrier & "'"
 
+            If netType <> "" Then sql = sql & " and netType='" & netType & "'"
+            If grid <> "" Then sql = sql & " and grid='" & grid & "'"
 
-            sql = sql & " and carrier='" & carrier & "'"
-
-
-            If netType <> "" Then
-                If doHaveWhere Then
-                    sql = sql & " and netType='" & netType & "'"
-                Else
-                    sql = sql & " where netType='" & netType & "'"
-                    doHaveWhere = True
-                End If
-            End If
-
-            If grid <> "" Then
-                If doHaveWhere Then
-                    sql = sql & " and grid='" & grid & "'"
-                Else
-                    sql = sql & " where grid='" & grid & "'"
-                    doHaveWhere = True
-                End If
-            End If
 
             If startTime <> "" Then
                 If endTime <> "" Then
@@ -1938,12 +1992,8 @@ Public Class HTTPHandle
                         startTime = d.ToString("yyyy-MM-dd HH:mm:ss")
                         d = Date.Parse(endTime)
                         endTime = d.ToString("yyyy-MM-dd HH:mm:ss")
-                        If doHaveWhere Then
-                            sql = sql & " and datetime>='" & startTime & "' and datetime<='" & endTime & "'"
-                        Else
-                            sql = sql & " where datetime>='" & startTime & "' and datetime<='" & endTime & "'"
-                            doHaveWhere = True
-                        End If
+                        sql = sql & " and datetime>='" & startTime & "' and datetime<='" & endTime & "'"
+
                     Catch ex As Exception
                         Return New NormalResponse(False, "起始时间或结束时间格式非法")
                     End Try
@@ -1973,10 +2023,8 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "没有任何数据", sql, "")
             End If
             Stepp = 4
-            ' "select province,city,district,netType,GDlon,GDlat,RSRP,time,SINR,eNodeBId,CellId from SDKTABLE"
             'Carrier,province,city,district,netType,GDlon,GDlat,RSRP,time,SINR
-            dt.Columns(0).ColumnName = "datetime"
-            ' dt.Columns(1).ColumnName = "carrier"
+            dt.Columns(0).ColumnName = "datetime"            ' dt.Columns(1).ColumnName = "carrier"
             dt.Columns(1).ColumnName = "province"
             dt.Columns(2).ColumnName = "city"
             dt.Columns(3).ColumnName = "district"
@@ -1988,7 +2036,7 @@ Public Class HTTPHandle
             dt.Columns(9).ColumnName = "Qoe"
             dt.Columns(10).ColumnName = "eNodeBId"
             dt.Columns(11).ColumnName = "CellId"
-            dt.Columns(12).ColumnName = "Grid"
+            'dt.Columns(12).ColumnName = "Grid"
             'Stepp = 5
             Return New NormalResponse(True, "", "", dt)
         Catch ex As Exception
@@ -2002,37 +2050,31 @@ Public Class HTTPHandle
             Dim city As String = context.Request.QueryString("city")
             Dim district As String = context.Request.QueryString("district")
             Dim siteType As String = context.Request.QueryString("siteType")
-            'Dim grid As String = context.Request.QueryString("grid")
-            Dim readIndex As Integer = context.Request.QueryString("readIndex")
-            Dim readCount As Integer = context.Request.QueryString("readCount")
+
             Stepp = 1
 
-            If city = "" Then
-                Return New NormalResponse(False, "必须选择城市")
-            End If
-
-            If carrier <> "移动" And carrier <> "联通" And carrier <> "电信" Then
-                Return New NormalResponse(False, "运营商错误")
-                ' Return New NormalResponse(False, "必须选择省份")carrier,
-            End If
-            Dim sql As String = "select carrier,district,enodebName,enodebName_Tt,state,gdLon,gdLat,siteType,h from TtLTE_CELINFO_Table "
+            If city = "" Then Return New NormalResponse(False, "必须选择城市")
+            If carrier <> "移动" And carrier <> "联通" And carrier <> "电信" Then Return New NormalResponse(False, "运营商错误{移动,联通,电信}")
+            '' Return New NormalResponse(False, "必须选择省份")carrier,
+            'End If
+            Dim sql As String = "select carrier,district,enodebName,enodebName_Tt,state,gdLon,gdLat,siteType,h from TtLte_CellInfo_Table "
             sql = sql & " where city='" & city & "'"
             sql = sql & " and instr(carrier,'" & carrier & "')>0 "
             If district <> "" Then sql = sql & " and district='" & district & "'"
             If siteType <> "" Then sql = sql & " and siteType='" & siteType & "'"
 
-            If IsNothing(readIndex) = False Then
-                If readIndex = 0 And readCount = 0 Then
-                Else
-                    If readIndex >= 0 Then
-                        If readCount <= 0 Then
-                            Return New NormalResponse(False, "readCount必须为正整数")
-                        End If
-                        sql = OracleSelectPage(sql, readIndex, readCount)
-                        '  sql = sql & "  limit " & readCount & " offset " & readCount
-                    End If
-                End If
-            End If
+            'If IsNothing(readIndex) = False Then
+            '    If readIndex = 0 And readCount = 0 Then
+            '    Else
+            '        If readIndex >= 0 Then
+            '            If readCount <= 0 Then
+            '                Return New NormalResponse(False, "readCount必须为正整数")
+            '            End If
+            '            sql = OracleSelectPage(sql, readIndex, readCount)
+            '            '  sql = sql & "  limit " & readCount & " offset " & readCount
+            '        End If
+            '    End If
+            'End If
             Stepp = 3
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
             If IsNothing(dt) Then
@@ -2044,9 +2086,7 @@ Public Class HTTPHandle
             Stepp = 4
 
             'carrier,district,enodebName,enodebName_Tt,state,gdLon,gdLat,siteType,h
-
             dt.Columns(0).ColumnName = "carrier"
-            ' dt.Columns(1).ColumnName = "carrier"
             dt.Columns(1).ColumnName = "district"
             dt.Columns(2).ColumnName = "enodebName"
             dt.Columns(3).ColumnName = "enodebName_Tt"
@@ -2073,8 +2113,8 @@ Public Class HTTPHandle
             Dim district As String = context.Request.QueryString("district")
             Dim siteType As String = context.Request.QueryString("siteType")
             'Dim grid As String = context.Request.QueryString("grid")
-            Dim readIndex As Integer = context.Request.QueryString("readIndex")
-            Dim readCount As Integer = context.Request.QueryString("readCount")
+            'Dim readIndex As Integer = context.Request.QueryString("readIndex")
+            'Dim readCount As Integer = context.Request.QueryString("readCount")
             Stepp = 1
 
             If carrier = "" Then
@@ -2088,7 +2128,7 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "运营商错误")
                 ' Return New NormalResponse(False, "必须选择省份")carrier,
             End If
-            Dim sql As String = "select district,enodebName,ecellName,eNodeBId,cellId,gdLon,gdLat,siteType,h,amzimuth,Tac,freq,pci from LTE_CELINFO_Table "
+            Dim sql As String = "select district,enodebName,ecellName,eNodeBId,cellId,gdLon,gdLat,siteType,h,amzimuth,Tac,freq,pci from Lte_CellInfo_Table "
 
             sql = sql & " where carrier='" & carrier & "'"
             sql = sql & " and city='" & city & "'"
@@ -2096,18 +2136,18 @@ Public Class HTTPHandle
             If district <> "" Then sql = sql & " and district='" & district & "'"
             If siteType <> "" Then sql = sql & " and siteType='" & siteType & "'"
 
-            If IsNothing(readIndex) = False Then
-                If readIndex = 0 And readCount = 0 Then
-                Else
-                    If readIndex >= 0 Then
-                        If readCount <= 0 Then
-                            Return New NormalResponse(False, "readCount必须为正整数")
-                        End If
-                        sql = OracleSelectPage(sql, readIndex, readCount)
-                        '  sql = sql & "  limit " & readCount & " offset " & readCount
-                    End If
-                End If
-            End If
+            'If IsNothing(readIndex) = False Then
+            '    If readIndex = 0 And readCount = 0 Then
+            '    Else
+            '        If readIndex >= 0 Then
+            '            If readCount <= 0 Then
+            '                Return New NormalResponse(False, "readCount必须为正整数")
+            '            End If
+            '            sql = OracleSelectPage(sql, readIndex, readCount)
+            '            '  sql = sql & "  limit " & readCount & " offset " & readCount
+            '        End If
+            '    End If
+            'End If
             Stepp = 3
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
             If IsNothing(dt) Then
@@ -2117,7 +2157,7 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "没有任何数据", sql, "")
             End If
             Stepp = 4
-            ' district,enodebName,ecellName,eNodeBId,cellId,gdLon,gdLat,siteType,h,amzimuth,Tac,freq,pci from LTE_CELINFO_Table "
+            ' district,enodebName,ecellName,eNodeBId,cellId,gdLon,gdLat,siteType,h,amzimuth,Tac,freq,pci from Lte_CellInfo_Table "
 
             ' "Select province,city,district,netType,GDlon,GDlat,RSRP,time,SINR,eNodeBId,CellId from SDKTABLE"
             'Carrier,province,city,district,netType,GDlon,GDlat,RSRP,time,SINR
