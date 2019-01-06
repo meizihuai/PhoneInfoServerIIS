@@ -2516,47 +2516,27 @@ Public Class HTTPHandle
     End Function
     Public Function Handle_RunSQL(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '按Sql来查询
         Try
+            If IsNothing(data) Then Return New NormalResponse(False, "sql is null")
             Dim str As String = data.ToString
-            Dim by() As Byte = Convert.FromBase64String(str)
-            Dim realBy() As Byte = Decompress(by)
-            str = Encoding.Default.GetString(realBy)
-            Dim runSqlInfo As RunSQLInfo = JsonConvert.DeserializeObject(str, GetType(RunSQLInfo))
-            If IsNothing(runSqlInfo) Then
-                Return New NormalResponse(False, "RunSQLInfo格式非法")
+            If str = "" Then Return New NormalResponse(False, "sql is null")
+            str = str.TrimStart(" ")
+            Dim isSelect As Boolean = False
+            Dim order As String = str.Split(" ")(0)
+            If order = "" Then Return New NormalResponse(False, "sql order is null")
+            order = order.ToLower
+            If order = "select" Then
+                isSelect = True
             End If
-            If runSqlInfo.sqllist.Count = 0 Then
-                Return New NormalResponse(False, "RunSQLInfo.SqlList.count=0")
-            End If
-            Dim conn As String = runSqlInfo.connStr
-            Dim failcount As Integer = 0
-            Dim successcount As Integer = 0
-            Dim startTime As Date = Now
-            Dim result As String = SQLInsertSQLList(conn, runSqlInfo.sqllist)
-            'Dim th As New Thread(Sub()
-            '                         Dim conn As String = runSqlInfo.connStr
-            '                         Dim failCount As Integer = 0
-            '                         Dim successCount As Integer = 0
-            '                         For Each itm In runSqlInfo.sqllist
-            '                             If SQLCmdWithConn(conn, itm) Then
-            '                                 successCount = successCount + 1
-            '                             Else
-            '                                 failCount = failCount + 1
-            '                             End If
-            '                         Next
-            '                     End Sub)
-            'th.Start()
-            Dim np As NormalResponse
-            If result = "success" Then
-                np = New NormalResponse(True, result, "", "提交SQL总行数:" & runSqlInfo.sqllist.Count & ",耗时:" & GetTimeSpam(startTime))
+            Dim sql As String = str
+            If isSelect Then
+                Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+                If IsNothing(dt) Then Return New NormalResponse(True, "", "", "[]")
+                If dt.Rows.Count = 0 Then Return New NormalResponse(True, "", "", "[]")
+                Return New NormalResponse(True, "", "", dt)
             Else
-                np = New NormalResponse(False, result, "", "提交SQL总行数:" & runSqlInfo.sqllist.Count & ",耗时:" & GetTimeSpam(startTime))
+                Dim result As String = ORALocalhost.SqlCMD(sql)
+                Return New NormalResponse(True, "", "", result)
             End If
-            Return np
-            'If failCount = 0 Then
-            '    Return New NormalResponse(True, "success")
-            'Else
-            '    Return New NormalResponse(True, "成功:" & successCount & ",失败:" & failCount)
-            'End If
         Catch ex As Exception
             Return New NormalResponse(False, ex.Message)
         End Try
