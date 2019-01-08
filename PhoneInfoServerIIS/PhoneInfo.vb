@@ -42,4 +42,5 @@ Public Class PhoneInfo
     Public Adj_RSRP1 As Integer
     Public Adj_SINR1 As Integer
     Public isScreenOn As Integer
+    Public isGPSOpen As Integer
 End Class

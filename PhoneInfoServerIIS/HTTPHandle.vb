@@ -589,6 +589,7 @@ Public Class HTTPHandle
         row("Adj_RSRP1".ToUpper) = pi.Adj_RSRP1
         row("Adj_SINR1".ToUpper) = pi.Adj_SINR1
         row("isScreenOn".ToUpper) = pi.isScreenOn
+        row("isGPSOpen".ToUpper) = pi.isGPSOpen
 
         row("phoneModel".ToUpper) = pi.phoneModel
         row("phoneName".ToUpper) = pi.phoneName
@@ -1811,13 +1812,13 @@ Public Class HTTPHandle
 
     Public Function Handle_GetQoeReportProAndCity(ByVal context As HttpContext) As NormalResponse '获取SDK中运营商的省、市、区信息
         Try
-            Dim carrier As String = context.Request.QueryString("carrier") '运营商 {‘中国联通’,'中国移动','中国电信'}
+            'Dim carrier As String = context.Request.QueryString("carrier") '运营商 {‘中国联通’,'中国移动','中国电信'}
 
-            If carrier.Length = 0 Then
-                Return New NormalResponse(False, "必须指定运营商，eg：‘中国联通’,'中国移动','中国电信'")
-            End If
+            'If carrier.Length = 0 Then
+            '    Return New NormalResponse(False, "必须指定运营商，eg：‘中国联通’,'中国移动','中国电信'")
+            'End If
 
-            Dim sql As String = "select province,city,district from QOE_REPORT_TABLE where carrier='" & carrier & "' GROUP BY province,city,district order by province asc"
+            Dim sql As String = "select province,city,district from QOE_REPORT_TABLE GROUP BY province,city,district order by province asc"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
             If IsNothing(dt) Then
                 Return New NormalResponse(False, "没有任何数据")
@@ -1863,7 +1864,7 @@ Public Class HTTPHandle
         End Try
     End Function
 
-
+    '获得QoeReport数据
     Public Function Handle_GetQoeReportRSRPPoint(ByVal context As HttpContext) As NormalResponse '获得QoeReport数据  Old Name :Handle_GetSmartPlanRSRPPoint      New： 
         Dim Stepp As Single = 0
         Try
@@ -1882,7 +1883,7 @@ Public Class HTTPHandle
             If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
             If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
 
-            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid from QOE_REPORT_TABLE "
+            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid,isOutSide,isGpsOpen from QOE_REPORT_TABLE "
 
             sql = sql & " where carrier='" & carrier & "'"
             If province <> "" Then sql = sql & " and province='" & province & "'"
@@ -1890,7 +1891,6 @@ Public Class HTTPHandle
             If district <> "" Then sql = sql & " and district='" & district & "'"
             If netType <> "" Then sql = sql & " and netType='" & netType & "'"
             If grid <> "" Then sql = sql & " and grid='" & grid & "'"
-
 
             If startTime <> "" Then
                 If endTime <> "" Then
@@ -3263,6 +3263,103 @@ Public Class HTTPHandle
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
             If IsNothing(dt) Then Return New NormalResponse(False, "dt is null")
             If dt.Rows.Count = 0 Then Return New NormalResponse(False, "dt.rows.count=0")
+            Return New NormalResponse(True, "", "", dt)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Structure SysModuleInfo
+        Dim id As String
+        Dim dateTime As String
+        Dim userName As String
+        Dim type As String
+        Dim content As String
+    End Structure
+    '新建查询模板
+    Public Function Handle_AddSysModule(context As HttpContext, data As Object) As NormalResponse
+        Try
+            If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
+            Dim str As String = JsonConvert.SerializeObject(data)
+            Dim mi As SysModuleInfo = JsonConvert.DeserializeObject(str, GetType(SysModuleInfo))
+            If IsNothing(mi) Then Return New NormalResponse(False, "SysModuleInfo is null,maybe json is error")
+            If mi.content.Contains(Chr(34)) Then
+                Return New NormalResponse(False, "content不允许包含双引号")
+            End If
+            mi.content = mi.content.Replace("'", Chr(34))
+            Dim sql As String = "insert into sys_module_table (dateTime,type,userName,content) values ('{0}','{1}','{2}','{3}')"
+            sql = String.Format(sql, New String() {Now.ToString("yyyy-MM-dd HH:mm:ss"), mi.type, mi.userName, mi.content})
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            If result = "success" Then
+                Return New NormalResponse(True, result)
+            Else
+                Return New NormalResponse(False, result, "", sql)
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    '删除查询模板
+    Public Function Handle_DeleteSysModule(context As HttpContext) As NormalResponse
+        Try
+            Dim id As String = context.Request.QueryString("id")
+            If IsNothing(id) Then Return New NormalResponse(False, "id is null")
+            If id = "" Then Return New NormalResponse(False, "id is ''")
+            Dim sql As String = "select * from sys_module_table where id=" & id
+            Dim isExist As Boolean = ORALocalhost.SqlIsIn(sql)
+            If Not isExist Then
+                Return New NormalResponse(False, "id does not exist")
+            End If
+            sql = "delete from sys_module_table where id=" & id
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            If result = "success" Then
+                Return New NormalResponse(True, "删除成功！")
+            Else
+                Return New NormalResponse(False, result)
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    '修改查询模板
+    Public Function Handle_UpdateSysModule(context As HttpContext, data As Object) As NormalResponse
+        Try
+            If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
+            Dim str As String = JsonConvert.SerializeObject(data)
+            Dim mi As SysModuleInfo = JsonConvert.DeserializeObject(str, GetType(SysModuleInfo))
+            If IsNothing(mi) Then Return New NormalResponse(False, "SysModuleInfo is null,maybe json is error")
+            Dim sql As String = "select * from sys_module_table where id=" & mi.id
+            Dim isExist As Boolean = ORALocalhost.SqlIsIn(sql)
+            If Not isExist Then
+                Return New NormalResponse(False, "id does not exist")
+            End If
+            If mi.content.Contains(Chr(34)) Then
+                Return New NormalResponse(False, "content不允许包含双引号")
+            End If
+            mi.content = mi.content.Replace("'", Chr(34))
+            sql = "update sys_module_table set dateTime='{0}',userName='{1}',type='{2}',content='{3}' where id=" & mi.id
+            sql = String.Format(sql, New String() {Now.ToString("yyyy-MM-dd HH:mm:ss"), mi.userName, mi.type, mi.content})
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            If result = "success" Then
+                Return New NormalResponse(True, "修改成功！")
+            Else
+                Return New NormalResponse(False, result)
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    '查询系统模板
+    Public Function Handle_GetSysModule(context As HttpContext) As NormalResponse
+        Try
+            Dim sql As String = "select * from sys_module_table"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return New NormalResponse(False, "没有任何数据")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何数据")
+            For Each row In dt.Rows
+                Dim content As String = row("CONTENT").ToString
+                content = content.Replace(Chr(34), "'")
+                row("CONTENT") = content
+            Next
             Return New NormalResponse(True, "", "", dt)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)

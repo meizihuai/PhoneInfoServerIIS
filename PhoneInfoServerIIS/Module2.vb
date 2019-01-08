@@ -17,7 +17,7 @@ Module Module2
     Public pgSQLLocalhost As New PgSQLHelper("localhost", 5432, "PhoneInfo", "mzh", "Smart9080")
     ' Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
     Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
-    Public apiVersion As String = "2.0.1"
+    Public apiVersion As String = "2.0.2"
     Structure normalResponse 'json回复格式
         Public result As Boolean
         Public msg As String
