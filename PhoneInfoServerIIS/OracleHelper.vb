@@ -26,8 +26,9 @@ Public Class OracleHelper
     End Function
     Private Function SubSqlCMDListQuickByPara(databaseName As String, ByVal dt As DataTable) As String
         If IsNothing(dt) Then Return "dt=null"
+        Dim conn As New OracleConnection(NKConnectString)
         Try
-            Dim conn As New OracleConnection(NKConnectString)
+
             conn.Open()
             Dim sql As String = "insert into " & databaseName & " ({0}) values ({1})"
             Dim measTypes As String = ""
@@ -80,6 +81,7 @@ Public Class OracleHelper
         Catch ex As Exception
             ' MsgBox(ex.ToString)
             'File.WriteAllText("d:\oraerr.txt", ex.ToString)
+            conn.Close()
             Return ex.ToString
         End Try
     End Function
@@ -96,10 +98,11 @@ Public Class OracleHelper
         End Try
     End Function
     Public Function SQLInfo(ByVal CmdString As String) As String
+        Dim SQL As New OracleConnection(NKConnectString)
         Try
-            Dim SQL As New OracleConnection(NKConnectString)
-            SQL.Open()
-            Dim SQLCommand As OracleCommand = New OracleCommand(CmdString, SQL)
+
+            Sql.Open()
+            Dim SQLCommand As OracleCommand = New OracleCommand(CmdString, Sql)
             Dim obj As Object = SQLCommand.ExecuteScalar
             Dim str As String = "success"
             If IsNothing(obj) = False Then
@@ -107,15 +110,17 @@ Public Class OracleHelper
                     str = obj.ToString
                 End If
             End If
-            SQL.Close()
+            Sql.Close()
             Return str
         Catch ex As Exception
+            SQL.Close()
             Return ex.Message
         End Try
     End Function
     Public Function SqlCMD(ByVal sql As String) As String
+        Dim conn As New OracleConnection(NKConnectString)
         Try
-            Dim conn As New OracleConnection(NKConnectString)
+
             conn.Open()
             Dim cmd As New OracleCommand(sql, conn)
             cmd.CommandTimeout = 99999999
@@ -123,13 +128,17 @@ Public Class OracleHelper
             conn.Close()
             Return "success"
         Catch ex As Exception
+            File.WriteAllText("d:\oraerrCmd.txt", ex.ToString & vbCrLf & sql)
+            conn.Close()
+
             Return ex.Message
         End Try
     End Function
     Public Function SqlCMDList(ByVal sqlList As List(Of String)) As String
         If IsNothing(sqlList) Then Return "sqlList=null"
+        Dim conn As New OracleConnection(NKConnectString)
         Try
-            Dim conn As New OracleConnection(NKConnectString)
+
             conn.Open()
             Dim str As String = ""
             For Each sq In sqlList
@@ -142,14 +151,15 @@ Public Class OracleHelper
             conn.Close()
             Return "success"
         Catch ex As Exception
+            conn.Close()
             Return ex.ToString
         End Try
     End Function
 
     Public Function SqlGetDT(ByVal sql As String) As DataTable
         Dim dt As New DataTable
+        Dim conn As New OracleConnection(NKConnectString)
         Try
-            Dim conn As New OracleConnection(NKConnectString)
             conn.Open()
             Dim cmd As New OracleCommand(sql, conn)
             cmd.CommandTimeout = 99999999
@@ -158,6 +168,8 @@ Public Class OracleHelper
             conn.Close()
             Return dt
         Catch ex As Exception
+            File.WriteAllText("d:\oraerrGet.txt", ex.ToString & vbCrLf & sql)
+            conn.Close()
             Return dt
         End Try
     End Function

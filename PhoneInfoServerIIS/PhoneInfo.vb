@@ -43,4 +43,13 @@ Public Class PhoneInfo
     Public Adj_SINR1 As Integer
     Public isScreenOn As Integer
     Public isGPSOpen As Integer
+
+    Public province As String
+    Public city As String
+    Public district As String
+    Public DetailAddress As String
+    Public bdlon As Double
+    Public bdlat As Double
+    Public gdlon As Double
+    Public gdlat As Double
 End Class

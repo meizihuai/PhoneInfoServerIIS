@@ -7,7 +7,7 @@ Public Class Global_asax
 
     Sub Application_Start(ByVal sender As Object, ByVal e As EventArgs)
         ' 应用程序启动时激发
-
+        MissionDog.StartWatching()
     End Sub
 
     Sub Session_Start(ByVal sender As Object, ByVal e As EventArgs)
@@ -28,10 +28,12 @@ Public Class Global_asax
 
     Sub Session_End(ByVal sender As Object, ByVal e As EventArgs)
         ' 会话结束时激发
+
     End Sub
 
     Sub Application_End(ByVal sender As Object, ByVal e As EventArgs)
         ' 应用程序结束时激发
+        MissionDog.StopWatching()
     End Sub
 
 End Class
