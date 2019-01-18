@@ -123,7 +123,9 @@
   <ItemGroup>
     <Content Include="Dev\ReadMe.txt" />
     <Content Include="Global.asax" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -132,15 +134,18 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppMission.vb" />
     <Compile Include="default.ashx.vb">
       <DependentUpon>default.ashx</DependentUpon>
     </Compile>
+    <Compile Include="DeviceHelper.vb" />
     <Compile Include="GetNewPiHelper.vb" />
     <Compile Include="GetNewPointByPhoneModelHelper.vb" />
     <Compile Include="Global.asax.vb">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="HTTPHandle.vb" />
+    <Compile Include="MissionDog.vb" />
     <Compile Include="Module2.vb" />
     <Compile Include="Mod_Response.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />

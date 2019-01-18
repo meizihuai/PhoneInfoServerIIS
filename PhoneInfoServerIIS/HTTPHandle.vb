@@ -528,8 +528,8 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
-
-    Public Function Handle_UploadPhoneInfo(context As HttpContext, data As Object) As NormalResponse 'Android app上传SDK
+    'Android app上传SDK数据 
+    Public Function Handle_UploadPhoneInfo(context As HttpContext, data As Object) As NormalResponse
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
             Dim pi As PhoneInfo = JsonConvert.DeserializeObject(str, GetType(PhoneInfo))
@@ -615,9 +615,13 @@ Public Class HTTPHandle
             Dim c As CoordInfo = GPS2BDS(pi.lon, pi.lat)
             row("BDLON".ToUpper) = c.x
             row("BDLAT".ToUpper) = c.y
+            pi.bdlon = c.x
+            pi.bdlat = c.x
             c = GPS2GDS(pi.lon, pi.lat)
             row("GDLON".ToUpper) = c.x
             row("GDLAT".ToUpper) = c.y
+            pi.gdlon = c.x
+            pi.gdlat = c.x
             If True Then
                 Dim la As LocationAddressInfo = GetAddressByLngLat(pi.lon, pi.lat)
                 If IsNothing(la) = False Then
@@ -625,6 +629,11 @@ Public Class HTTPHandle
                     row("CITY".ToUpper) = la.City
                     row("DISTRICT".ToUpper) = la.District
                     row("ADDRESS".ToUpper) = la.DetailAddress
+
+                    pi.province = la.Province
+                    pi.city = la.City
+                    pi.district = la.District
+                    pi.DetailAddress = la.DetailAddress
                 End If
             End If
         Else
@@ -648,7 +657,11 @@ Public Class HTTPHandle
 
         row("grid".ToUpper) = GetGridBySQL(pi.lon, pi.lat)
         row("QOER") = GetQoerPingScore(pi.PING_AVG_RTT)
+        Try
+            DeviceHelper.ChangeDeviceStatus(pi)
+        Catch ex As Exception
 
+        End Try
         dt.Rows.Add(row)
         Dim result As String = ORALocalhost.SqlCMDListQuickByPara("QOE_REPORT_TABLE", dt)
         If result = "success" Then
@@ -1119,24 +1132,6 @@ Public Class HTTPHandle
     End Function
 
 
-    Private Function GetOraTableColumns(tableName As String) As String()
-        'select COLUMN_NAME from user_tab_columns where table_name ='QOE_REPORT_TABLE'
-        Try
-            Dim sql As String = "select COLUMN_NAME from user_tab_columns where table_name ='" & tableName.ToUpper & "'"
-            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-            If IsNothing(dt) Then Return Nothing
-            If dt.Rows.Count = 0 Then Return Nothing
-            Dim list As New List(Of String)
-            For Each row As DataRow In dt.Rows
-                If IsNothing(row(0)) = False Then
-                    list.Add(row(0).ToString)
-                End If
-            Next
-            Return list.ToArray
-        Catch ex As Exception
-            Return Nothing
-        End Try
-    End Function
 
 
     Public Function Handle_UploadVLCTestInfo(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '上传VLC
@@ -1806,8 +1801,6 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "GetQoePointErr:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
-
-
 
 
     Public Function Handle_GetQoeReportProAndCity(ByVal context As HttpContext) As NormalResponse '获取SDK中运营商的省、市、区信息
@@ -3364,5 +3357,104 @@ Public Class HTTPHandle
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try
+    End Function
+
+    Public Function Handle_GetCanUpdate(context As HttpContext, data As Object) As NormalResponse
+        Try
+            Dim str As String = JsonConvert.SerializeObject(data)
+            Dim obj As JObject = JObject.Parse(str)
+            Dim appName As String = obj.GetValue("appName")
+            Dim version As String = obj.GetValue("version")
+            If appName = "" Or version = "" Then
+                Return New NormalResponse(False, "appName或version为空")
+            End If
+            Dim rootPath As String = ""   ' "d:\soft\update\"
+            Dim virtualPath As String = "update"
+            rootPath = System.Web.HttpContext.Current.Server.MapPath("~/" & virtualPath & "/")
+            Dim appNameWithoutExe As String = appName
+            If appName.Contains(".") Then
+                appNameWithoutExe = appName.Split(".")(0)
+                If appNameWithoutExe = "" Then
+                    Return New NormalResponse(False, "appName为空")
+                End If
+            End If
+            Dim appPath As String = rootPath & "\" & appNameWithoutExe & "\"
+            Dim appFileName As String = appPath & appName
+            Dim appVersionFileName As String = appPath & "version.txt"
+            If File.Exists(appVersionFileName) = False Then
+                Return New NormalResponse(False, "服务器没有改app的升级信息，请联系管理员")
+            End If
+            Dim appVersion As String = File.ReadAllText(appVersionFileName)
+            Try
+                Dim oldVersion As Version = System.Version.Parse(version)
+                Dim newVersion As Version = System.Version.Parse(appVersion)
+                Dim flag As Boolean = CanUpdate(version, appVersion)
+                Dim nb As New JObject
+                nb.Add("canUpdate", flag)
+                nb.Add("serverVersion", appVersion)
+                nb.Add("url", "http://221.238.40.153:7062/" & virtualPath & "/" & appNameWithoutExe & "/" & appName)
+                Return New NormalResponse(True, "", "", nb)
+            Catch ex As Exception
+                Return New NormalResponse(False, "version版本格式非法，无法比较")
+            End Try
+        Catch ex As Exception
+
+        End Try
+    End Function
+    Public Function CanUpdate(ByVal oldVersion As String, ByVal newVersion As String) As Boolean
+        Dim oldv As New Version(oldVersion)
+        Dim newv As New Version(newVersion)
+        If oldv < newv Then
+            Return True
+        Else
+            Return False
+        End If
+
+    End Function
+
+    '新增任务
+    Public Function Handle_AddMission(context As HttpContext, data As Object) As NormalResponse
+        Dim str As String
+        Try
+            str = JsonConvert.SerializeObject(data)
+            Dim am As AppMission = JsonConvert.DeserializeObject(str, GetType(AppMission))
+            If IsNothing(am) Then Return New NormalResponse(False, "AppMission is null")
+            Dim np As NormalResponse = DeviceHelper.AddMission(am)
+            Return np
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString, "", str)
+        End Try
+    End Function
+    '查询在线正在执行的任务
+    Public Function Handle_GetOnlineMission(context As HttpContext) As NormalResponse
+        Dim endTime As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
+        Dim sql As String = "select * from app_mission_table where isClosed=0"
+        Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+        If IsNothing(dt) Then Return New NormalResponse(False, "没有正在执行的任务")
+        If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有正在执行的任务")
+        Return New NormalResponse(True, "", "", dt)
+    End Function
+    '查询异常任务
+    Public Function Handle_GetErrorMission(context As HttpContext) As NormalResponse
+        Dim endTime As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
+        Dim sql As String = "select * from app_mission_table where isClosed=0 and status='" & "异常" & "'"
+        Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+        If IsNothing(dt) Then Return New NormalResponse(False, "没有异常任务")
+        If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有异常任务")
+        Return New NormalResponse(True, "", "", dt)
+    End Function
+    '查询设备权限
+    Public Function Handle_GetDevicePermission(context As HttpContext) As NormalResponse
+        Dim imei As String = context.Request.QueryString("imei")
+        If imei = "" Then Return New NormalResponse(True, "", "", 0)
+        Dim sql As String = "select * from deviceTable where imei='" & imei & "'"
+        Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+        If IsNothing(dt) Then Return New NormalResponse(True, "", "", 0)
+        If dt.Rows.Count = 0 Then Return New NormalResponse(True, "", "", 0)
+        Dim row As DataRow = dt.Rows(0)
+        Dim permission As String = row("power").ToString
+        If IsNothing(permission) Then permission = 0
+        If permission = "" Then permission = 0
+        Return New NormalResponse(True, "", "", permission)
     End Function
 End Class

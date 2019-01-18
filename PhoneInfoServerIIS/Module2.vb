@@ -36,6 +36,24 @@ Module Module2
             data = ""
         End Sub
     End Structure
+    Public Function GetOraTableColumns(tableName As String) As String()
+        'select COLUMN_NAME from user_tab_columns where table_name ='QOE_REPORT_TABLE'
+        Try
+            Dim sql As String = "select COLUMN_NAME from user_tab_columns where table_name ='" & tableName.ToUpper & "'"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return Nothing
+            If dt.Rows.Count = 0 Then Return Nothing
+            Dim list As New List(Of String)
+            For Each row As DataRow In dt.Rows
+                If IsNothing(row(0)) = False Then
+                    list.Add(row(0).ToString)
+                End If
+            Next
+            Return list.ToArray
+        Catch ex As Exception
+            Return Nothing
+        End Try
+    End Function
 
     Public Function GetLen(ByVal k As Long) As String
         Dim str As String = ""
