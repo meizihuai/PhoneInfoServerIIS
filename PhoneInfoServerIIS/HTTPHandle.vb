@@ -120,6 +120,7 @@ Public Class HTTPHandle
             district.Add(_districtName)
         End Sub
     End Structure
+
     Structure VLCTestInfo
         Dim ID As Integer
         Dim Time As String
@@ -321,12 +322,105 @@ Public Class HTTPHandle
         End Try
     End Function
 
+
+    Public Function Handle_DeleteDtGroup(ByVal context As HttpContext) As NormalResponse '删除测试组
+        Try
+            Dim groupID As String = context.Request.QueryString("groupID")
+
+            Dim sql As String = "delete from Dt_Group where groupID='" & groupID & "'"
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            If result = "success" Then
+                Return New NormalResponse(True, "删除 " & groupID & " 成功！")
+            Else
+                Return New NormalResponse(False, result)
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.Message)
+        End Try
+    End Function
+
+
+    Public Function Handle_UpdateDtGroup(ByVal context As HttpContext) As NormalResponse '更新测试组
+        Dim Stepp As Single = 0
+        Try
+            'CREATE TABLE Worklog(day varchar(50) not null,name varchar(50) not null, workContent varchar(2000) default '',issue varchar(200) default '',modifiedBy varchar(50) default '',ModifiedDate varchar(50) default '')
+            Dim province As String = context.Request.QueryString("province")
+            Dim city As String = context.Request.QueryString("city")
+            Dim groupId As String = context.Request.QueryString("groupId")
+            Dim line As String = context.Request.QueryString("line")
+            Dim name_cm As String = context.Request.QueryString("name_cm")
+            Dim imei_cm As String = context.Request.QueryString("imei_cm")
+            Dim phone_cm As String = context.Request.QueryString("phone_cm")
+            Dim name_cu As String = context.Request.QueryString("name_cu")
+            Dim imei_cu As String = context.Request.QueryString("imei_cu")
+            Dim phone_cu As String = context.Request.QueryString("phone_cu")
+            Dim name_ct As String = context.Request.QueryString("name_ct")
+            Dim imei_ct As String = context.Request.QueryString("imei_ct")
+            Dim phone_ct As String = context.Request.QueryString("phone_ct")
+            Dim modified_datetime As String = context.Request.QueryString("modified_datetime")
+            Dim modified_by As String = context.Request.QueryString("modified_by")
+            Dim demo As String = context.Request.QueryString("demo")
+
+
+            'Stepp = 1
+            province = Trim(province) : groupId = Trim(groupId)
+            If groupId = "" Then Return New NormalResponse(False, "必须输入groupId")
+            'If day = "" Then Return New NormalResponse(False, "必须输入日期")
+            'If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
+
+            Dim Cond As String = "", sql As String
+
+
+            If province <> "" Then Cond = " province='" & province & "'"
+            If city <> "" Then Cond = IIf(Cond = 0, "", " and ") & " city ='" & city & "'"
+            If line <> "" Then Cond = IIf(Cond = 0, "", " and ") & " line ='" & line & "'"
+            If name_cm <> "" Then Cond = IIf(Cond = 0, "", " and ") & " name_cm ='" & name_cm & "'"
+            If imei_cm <> "" Then Cond = IIf(Cond = 0, "", " and ") & " imei_cm ='" & imei_cm & "'"
+            If phone_cm <> "" Then Cond = IIf(Cond = 0, "", " and ") & " phone_cm ='" & phone_cm & "'"
+
+            If name_cu <> "" Then Cond = IIf(Cond = 0, "", " and ") & " name_cu ='" & name_cu & "'"
+            If imei_cu <> "" Then Cond = IIf(Cond = 0, "", " and ") & " imei_cu ='" & imei_cu & "'"
+            If phone_cu <> "" Then Cond = IIf(Cond = 0, "", " and ") & " phone_cu ='" & phone_cu & "'"
+
+            If name_ct <> "" Then Cond = IIf(Cond = 0, "", " and ") & " name_ct ='" & name_ct & "'"
+            If imei_ct <> "" Then Cond = IIf(Cond = 0, "", " and ") & " imei_ct ='" & imei_ct & "'"
+            If phone_ct <> "" Then Cond = IIf(Cond = 0, "", " and ") & " phone_ct ='" & phone_ct & "'"
+
+            If Cond.Length = 0 Then
+                Return New NormalResponse(False, "更新条件为空", groupId, "")
+            End If
+            sql = "update Worklog set " & Cond & " where groupID='" & groupId & "'"
+
+            Stepp = 3
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+
+            If result = "success" Then
+                Return New NormalResponse(True, "更新 " & Cond & " 成功！")
+            Else
+                Return New NormalResponse(False, result)
+            End If
+            Stepp = 4
+            ' "select province,city,district,netType,GDlon,GDlat,RSRP,time,SINR,eNodeBId,CellId from SDKTABLE"
+            'Carrier,province,city,district,netType,GDlon,GDlat,RSRP,time,SINR
+            'dt.Columns(0).ColumnName = "project"            ' dt.Columns(1).ColumnName = "carrier"
+            'dt.Columns(1).ColumnName = "workContent"
+            'dt.Columns(2).ColumnName = "issue"
+
+
+            'Stepp = 5
+            Return New NormalResponse(True, "", "", "")
+        Catch ex As Exception
+            Return New NormalResponse(False, "更新测试组错误 Err:" & ex.Message & ",Step=" & Stepp)
+        End Try
+    End Function
+
     Public Function Handle_UploadTtLteCellInfo(context As HttpContext, data As Object) As NormalResponse '保存铁塔Lte工参
         Dim Stepp As Integer = -1
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
             Stepp = 0
             Try
+
                 Dim lteCellInfoList As List(Of TtLTECellInfo) = JsonConvert.DeserializeObject(str, GetType(List(Of TtLTECellInfo)))
                 If IsNothing(lteCellInfoList) Then
                     Return New NormalResponse(False, "TtlteCellInfoList is null")
@@ -572,7 +666,7 @@ Public Class HTTPHandle
         row("Day".ToUpper) = dateTime.ToString("yyyy-MM-dd")
         row("ISUPLOADDATATIMELY") = pi.ISUPLOADDATATIMELY
         If pi.businessType = "" Then
-            pi.businessType = "SDK"
+            pi.businessType = ""
         End If
         If pi.apkName = "" Then
             pi.apkName = "众手测试"
@@ -1876,7 +1970,7 @@ Public Class HTTPHandle
             If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
             If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
 
-            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid,isOutSide,isGpsOpen from QOE_REPORT_TABLE "
+            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid,ENODEBID_CELLID,isOutSide,isGpsOpen from QOE_REPORT_TABLE "
 
             sql = sql & " where carrier='" & carrier & "'"
             If province <> "" Then sql = sql & " and province='" & province & "'"
@@ -1938,6 +2032,7 @@ Public Class HTTPHandle
             dt.Columns(10).ColumnName = "eNodeBId"
             dt.Columns(11).ColumnName = "CellId"
             dt.Columns(12).ColumnName = "Grid"
+            dt.Columns(13).ColumnName = "eNodeBid_Cellid"
             'Stepp = 5
             Return New NormalResponse(True, "", "", dt)
         Catch ex As Exception
@@ -3110,7 +3205,7 @@ Public Class HTTPHandle
             '    Return New NormalResponse(False, "运营商错误")
             '    ' Return New NormalResponse(False, "必须选择省份")carrier,
             'End If
-            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid from QOE_REPORT_TABLE "
+            Dim sql As String = "select passWord from QOE_REPORT_TABLE "
             Dim doHaveWhere As Boolean = False
             'If province <> "" Then
             '    sql = sql & " where province='" & province & "'"
@@ -3119,18 +3214,12 @@ Public Class HTTPHandle
             sql = sql & " where userName='" & userName & "' and passWord='" & passWord & "'"
             doHaveWhere = True
 
-
             sql = sql & " and carrier='" & carrier & "'"
-
 
             If carrier <> "" Then sql = sql & " and carrier='" & carrier & "'"
 
             If province <> "" Then sql = sql & " and province='" & province & "'"
             If city <> "" Then sql = sql & " and city='" & city & "'"
-
-
-
-
 
             Stepp = 3
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
@@ -3160,11 +3249,11 @@ Public Class HTTPHandle
             'Stepp = 5
             Return New NormalResponse(True, "", "", dt)
         Catch ex As Exception
-            Return New NormalResponse(False, "GetUeQoeReportRSRPPoint Err:" & ex.Message & ",Step=" & Stepp)
+            Return New NormalResponse(False, "GetAccount Err:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
 
-    Public Function Handle_GetIndexPageTable0(context As HttpContext) As NormalResponse '2018-12-23 09:54:00 更新 增加首页拼接表
+    Public Function Handle_GetIndexPageTable0(context As HttpContext) As NormalResponse '2018-12-23 更新 增加首页拼接表
         Try
             'Dim count As String = context.Request.QueryString("count")
             'If count = "" Then count = 10
@@ -3250,7 +3339,8 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-    Public Function Handle_GetQOEVideoSource(context As HttpContext) As NormalResponse
+
+    Public Function Handle_GetQOEVideoSource(context As HttpContext) As NormalResponse '获取QOE视频源
         Try
             Dim sql As String = "select * from QOE_VIDEO_SOURCE where isuse=1"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
@@ -3268,8 +3358,8 @@ Public Class HTTPHandle
         Dim type As String
         Dim content As String
     End Structure
-    '新建查询模板
-    Public Function Handle_AddSysModule(context As HttpContext, data As Object) As NormalResponse
+
+    Public Function Handle_AddSysModule(context As HttpContext, data As Object) As NormalResponse '新建查询模板
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -3291,8 +3381,8 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-    '删除查询模板
-    Public Function Handle_DeleteSysModule(context As HttpContext) As NormalResponse
+
+    Public Function Handle_DeleteSysModule(context As HttpContext) As NormalResponse  '删除查询模板
         Try
             Dim id As String = context.Request.QueryString("id")
             If IsNothing(id) Then Return New NormalResponse(False, "id is null")
@@ -3313,8 +3403,8 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-    '修改查询模板
-    Public Function Handle_UpdateSysModule(context As HttpContext, data As Object) As NormalResponse
+
+    Public Function Handle_UpdateSysModule(context As HttpContext, data As Object) As NormalResponse  '修改查询模板
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -3341,8 +3431,8 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-    '查询系统模板
-    Public Function Handle_GetSysModule(context As HttpContext) As NormalResponse
+
+    Public Function Handle_GetSysModule(context As HttpContext) As NormalResponse  '查询系统模板
         Try
             Dim sql As String = "select * from sys_module_table"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
