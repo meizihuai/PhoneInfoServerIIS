@@ -1,1 +1,5 @@
-﻿
+﻿增加enodeBid_cellid字段
+alter table QOE_REPORT_TABLE add ENODEBID_CELLID VARCHAR2(100)
+
+
+update QOE_REPORT_TABLE set ENODEBID_CELLID=ENODEBID || '_' || CELLID

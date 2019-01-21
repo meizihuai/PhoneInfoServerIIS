@@ -12,6 +12,7 @@ Imports Oracle.ManagedDataAccess.Client
 Imports Newtonsoft
 Imports Newtonsoft.Json
 Imports Newtonsoft.Json.Linq
+
 Public Class OracleHelper
     Dim NKConnectString As String = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=111.53.74.132)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=oss)));Persist Security Info=True;User ID=npo;Password=Smart9080;"
     Sub New(ip As String, port As Integer, seviceName As String, usr As String, pwd As String)
@@ -28,7 +29,6 @@ Public Class OracleHelper
         If IsNothing(dt) Then Return "dt=null"
         Dim conn As New OracleConnection(NKConnectString)
         Try
-
             conn.Open()
             Dim sql As String = "insert into " & databaseName & " ({0}) values ({1})"
             Dim measTypes As String = ""
