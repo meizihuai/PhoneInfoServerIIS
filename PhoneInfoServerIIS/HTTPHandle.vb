@@ -2997,7 +2997,7 @@ Public Class HTTPHandle
         End Try
     End Function
 
-
+    '获取首页表格数据
     Public Function Handle_GetIndexPageTable(context As HttpContext) As NormalResponse '2018-12-23 09:54:00 更新 增加首页拼接表
         Dim info As String
         Try
@@ -3006,19 +3006,45 @@ Public Class HTTPHandle
             'If IsNumeric(count) = False Then
             '    Return New NormalResponse(False, "count 非数字")
             'End If
-            Dim sql As String = "select day,count(day) from QOE_REPORT_TABLE GROUP BY day ORDER BY day desc"
-            sql = OracleSelectPage(sql, 0, 7)
-            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-            If IsNothing(dt) Then Return New NormalResponse(False, "没有任何数据")
-            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何数据")
+            Dim sb As New StringBuilder
+            Dim workStartTime As Date = Now
+            Dim sql As String = "select day from QOE_REPORT_TABLE GROUP BY day ORDER BY day desc"
+            Dim dt As DataTable
+            'sql = OracleSelectPage(sql, 0, 7)
+            'Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            'If IsNothing(dt) Then Return New NormalResponse(False, "没有任何数据")
+            'If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何数据")
             Dim dayList As New List(Of String)
-            For Each row In dt.Rows
-                If IsNothing(row(0)) = False Then
-                    If row(0) <> "" Then
-                        dayList.Add(row(0))
-                    End If
-                End If
+            'For Each row In dt.Rows
+            '    If IsNothing(row(0)) = False Then
+            '        If row(0) <> "" Then
+            '            dayList.Add(row(0))
+            '        End If
+            '    End If
+            'Next
+            Dim n As Date = Now
+            For i = 0 To 6
+                dayList.Add(n.AddDays(-1 * i).ToString("yyyy-MM-dd"))
             Next
+            sb.AppendLine("查询最近7天时间列表:" & GetTimeSpam(workStartTime))
+            workStartTime = Now
+            sql = "select day from indexPageTable"
+            Dim dayDt As DataTable = ORALocalhost.SqlGetDT(sql)
+            Dim oldDayList As New List(Of String)
+            Dim nowDay As String = Now.ToString("yyyy-MM-dd")
+            If IsNothing(dayDt) = False Then
+                For Each dayRow In dayDt.Rows
+                    Dim day As String = dayRow("day".ToUpper)
+                    If day <> nowDay Then
+                        If dayList.Contains(day) Then
+                            dayList.Remove(day)
+                            oldDayList.Add(day)
+                        End If
+                    End If
+                Next
+            End If
+            sb.AppendLine("比对历史时间列表:" & GetTimeSpam(workStartTime))
+            workStartTime = Now
             Dim resultDt As New DataTable
             resultDt.Columns.Add("时间")
             resultDt.Columns.Add("采样点总数(移动)")
@@ -3036,6 +3062,32 @@ Public Class HTTPHandle
             resultDt.Columns.Add("HttpQOE(移动)")
             resultDt.Columns.Add("HttpQOE(联通)")
             resultDt.Columns.Add("HttpQOE(电信)")
+            For Each d In oldDayList
+                sql = "select * from indexPageTable where day='" & d & "'"
+                Dim dtmp As DataTable = ORALocalhost.SqlGetDT(sql)
+                If IsNothing(dtmp) = False Then
+                    If dtmp.Rows.Count > 0 Then
+                        Dim row As DataRow = dtmp.Rows(0)
+                        Dim rw As DataRow = resultDt.NewRow
+                        rw("时间") = row("day".ToUpper)
+                        rw("采样点总数(移动)") = row("total_YD".ToUpper)
+                        rw("采样点总数(联通)") = row("total_LT".ToUpper)
+                        rw("采样点总数(电信)") = row("total_DX".ToUpper)
+                        rw("覆盖率(移动)") = row("coverage_YD".ToUpper)
+                        rw("覆盖率(联通)") = row("coverage_LT".ToUpper)
+                        rw("覆盖率(电信)") = row("coverage_DX".ToUpper)
+                        rw("QOE(移动)") = row("QOE_YD".ToUpper)
+                        rw("QOE(联通)") = row("QOE_LT".ToUpper)
+                        rw("QOE(电信)") = row("QOE_DX".ToUpper)
+                        rw("HttpQOE(移动)") = row("HTTPQOE_YD".ToUpper)
+                        rw("HttpQOE(联通)") = row("HTTPQOE_LT".ToUpper)
+                        rw("HttpQOE(电信)") = row("HTTPQOE_DX".ToUpper)
+                        resultDt.Rows.Add(rw)
+                    End If
+                End If
+            Next
+            sb.AppendLine("复制历史时间数据:" & GetTimeSpam(workStartTime))
+            workStartTime = Now
             For Each itm In dayList
                 Dim row As DataRow = resultDt.NewRow
                 row("时间") = itm
@@ -3089,7 +3141,6 @@ Public Class HTTPHandle
 
                             End If
 
-                            'MsgBox.show()
                             If carrier = "中国联通" Then
                                 row("采样点总数(联通)") = carrierCount
                                 'sql = "select round(avg(rsrp),0) from QOE_REPORT_TABLE WHERE day='" & itm & "' and CARRIER='中国联通' and rsrp<0"
@@ -3175,81 +3226,72 @@ Public Class HTTPHandle
                 End If
                 resultDt.Rows.Add(row)
             Next
-
-            Return New NormalResponse(True, "", "", resultDt)
+            sb.AppendLine("计算新时间数据:" & GetTimeSpam(workStartTime))
+            workStartTime = Now
+            Dim cols() As String = GetOraTableColumns("indexPageTable")
+            Dim pageDt As New DataTable
+            If IsNothing(cols) = False Then
+                For Each d In cols
+                    If d <> "ID" Then
+                        pageDt.Columns.Add(d)
+                    End If
+                Next
+            End If
+            Dim dateTimeStr As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
+            For Each row In resultDt.Rows
+                Dim dayStr As String = row("时间")
+                If dayStr = nowDay Then
+                    Dim rw As DataRow = pageDt.NewRow
+                    rw("day".ToUpper) = dayStr
+                    rw("total_YD".ToUpper) = row("采样点总数(移动)")
+                    rw("total_LT".ToUpper) = row("采样点总数(联通)")
+                    rw("total_DX".ToUpper) = row("采样点总数(电信)")
+                    rw("coverage_YD".ToUpper) = row("覆盖率(移动)")
+                    rw("coverage_LT".ToUpper) = row("覆盖率(联通)")
+                    rw("coverage_DX".ToUpper) = row("覆盖率(电信)")
+                    rw("QOE_YD".ToUpper) = row("QOE(移动)")
+                    rw("QOE_LT".ToUpper) = row("QOE(联通)")
+                    rw("QOE_DX".ToUpper) = row("QOE(电信)")
+                    rw("HTTPQOE_YD".ToUpper) = row("HttpQOE(移动)")
+                    rw("HTTPQOE_LT".ToUpper) = row("HttpQOE(联通)")
+                    rw("HTTPQOE_DX".ToUpper) = row("HttpQOE(电信)")
+                    rw("dateTime".ToUpper) = dateTimeStr
+                    pageDt.Rows.Add(rw)
+                Else
+                    If oldDayList.Contains(dayStr) = False Then
+                        Dim rw As DataRow = pageDt.NewRow
+                        rw("day".ToUpper) = dayStr
+                        rw("total_YD".ToUpper) = row("采样点总数(移动)")
+                        rw("total_LT".ToUpper) = row("采样点总数(联通)")
+                        rw("total_DX".ToUpper) = row("采样点总数(电信)")
+                        rw("coverage_YD".ToUpper) = row("覆盖率(移动)")
+                        rw("coverage_LT".ToUpper) = row("覆盖率(联通)")
+                        rw("coverage_DX".ToUpper) = row("覆盖率(电信)")
+                        rw("QOE_YD".ToUpper) = row("QOE(移动)")
+                        rw("QOE_LT".ToUpper) = row("QOE(联通)")
+                        rw("QOE_DX".ToUpper) = row("QOE(电信)")
+                        rw("HTTPQOE_YD".ToUpper) = row("HttpQOE(移动)")
+                        rw("HTTPQOE_LT".ToUpper) = row("HttpQOE(联通)")
+                        rw("HTTPQOE_DX".ToUpper) = row("HttpQOE(电信)")
+                        rw("dateTime".ToUpper) = dateTimeStr
+                        pageDt.Rows.Add(rw)
+                    End If
+                End If
+            Next
+            If pageDt.Rows.Count > 0 Then
+                sql = "delete  from indexPageTable where day='" & nowDay & "'"
+                ORALocalhost.SqlCMD(sql)
+                ORALocalhost.SqlCMDListQuickByPara("indexPageTable", pageDt)
+            End If
+            sb.AppendLine("修改历史新时间数据:" & GetTimeSpam(workStartTime))
+            workStartTime = Now
+            resultDt.DefaultView.Sort = "时间 desc"
+            resultDt = resultDt.DefaultView.ToTable()
+            sb.AppendLine("排序:" & GetTimeSpam(workStartTime))
+            workStartTime = Now
+            Return New NormalResponse(True, "version=1.0 计算量 dayList.length=" & dayList.Count, sb.ToString, resultDt)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
-        End Try
-    End Function
-
-    Public Function Handle_GetAccount(ByVal context As HttpContext) As NormalResponse '获得用户账号 
-        Dim Stepp As Single = 0
-        Try
-
-            Dim carrier As String = context.Request.QueryString("carrier") '运营商 {'中国联通','中国移动','中国电信'}
-            Dim province As String = context.Request.QueryString("province")
-            Dim city As String = context.Request.QueryString("city")
-            Dim userName As String = context.Request.QueryString("userName")
-            Dim passWord As String = context.Request.QueryString("passWord")
-
-            Stepp = 1
-
-            If userName = "" Then Return New NormalResponse(False, "用户名为空错误")
-            If passWord = "" Then Return New NormalResponse(False, "密码为空错误")
-
-
-            'If carrier = "" Then
-            '    Return New NormalResponse(False, "必须选择运营商")
-            'End If
-            'If carrier <> "移动" And carrier <> "联通" And carrier <> "电信" Then
-            '    Return New NormalResponse(False, "运营商错误")
-            '    ' Return New NormalResponse(False, "必须选择省份")carrier,
-            'End If
-            Dim sql As String = "select passWord from QOE_REPORT_TABLE "
-            Dim doHaveWhere As Boolean = False
-            'If province <> "" Then
-            '    sql = sql & " where province='" & province & "'"
-            '    doHaveWhere = True
-            'End If
-            sql = sql & " where userName='" & userName & "' and passWord='" & passWord & "'"
-            doHaveWhere = True
-
-            sql = sql & " and carrier='" & carrier & "'"
-
-            If carrier <> "" Then sql = sql & " and carrier='" & carrier & "'"
-
-            If province <> "" Then sql = sql & " and province='" & province & "'"
-            If city <> "" Then sql = sql & " and city='" & city & "'"
-
-            Stepp = 3
-            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-            If IsNothing(dt) Then
-                Return New NormalResponse(False, "没有任何数据", sql, "")
-            End If
-            If dt.Rows.Count = 0 Then
-                Return New NormalResponse(False, "没有任何数据", sql, "")
-            End If
-            Stepp = 4
-            ' "select province,city,district,netType,GDlon,GDlat,RSRP,time,SINR,eNodeBId,CellId from SDKTABLE"
-            'Carrier,province,city,district,netType,GDlon,GDlat,RSRP,time,SINR
-            dt.Columns(0).ColumnName = "datetime"
-            ' dt.Columns(1).ColumnName = "carrier"
-            dt.Columns(1).ColumnName = "province"
-            dt.Columns(2).ColumnName = "city"
-            dt.Columns(3).ColumnName = "district"
-            dt.Columns(4).ColumnName = "netType"
-            dt.Columns(5).ColumnName = "lon"
-            dt.Columns(6).ColumnName = "lat"
-            dt.Columns(7).ColumnName = "RSRP"
-            dt.Columns(8).ColumnName = "SINR"
-            dt.Columns(9).ColumnName = "Qoe"
-            dt.Columns(10).ColumnName = "eNodeBId"
-            dt.Columns(11).ColumnName = "CellId"
-            dt.Columns(12).ColumnName = "Grid"
-            'Stepp = 5
-            Return New NormalResponse(True, "", "", dt)
-        Catch ex As Exception
-            Return New NormalResponse(False, "GetAccount Err:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
 
