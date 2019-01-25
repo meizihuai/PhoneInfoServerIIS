@@ -20,10 +20,11 @@ Imports System.Web
 Imports MySql.Data.MySqlClient
 Imports System.Reflection
 Imports System.IO.Compression
-
+''' <summary>
+'''本类用于处理HTTP Get和Post请求，主要API都在此，通过反射来获取API处理程序
+''' </summary>
 Public Class HTTPHandle
-    Structure DtInfo
-
+    Structure DtInfo '测试组信息
         Dim province As String
         Dim city As String
         Dim groupId As String
@@ -40,7 +41,6 @@ Public Class HTTPHandle
         Dim modified_datetime As String
         Dim modified_by As String
         Dim demo As String
-
     End Structure
     Structure TtLTECellInfo '铁塔工参
         Dim carrier As String
@@ -68,7 +68,7 @@ Public Class HTTPHandle
         ' Dim type As String
 
     End Structure
-    Structure LTECellInfo
+    Structure LTECellInfo 'LTE工参
         Dim carrier As String '运营商
         Dim city As String '地区
         Dim district As String '区县
@@ -94,7 +94,7 @@ Public Class HTTPHandle
         ' Dim type As String
 
     End Structure
-    Structure ProAndCity
+    Structure ProAndCity  '省份信息 包含市列表
         Dim province As String
         Dim cityList As List(Of cityInfo)
         Sub New(ByVal _province As String)
@@ -107,7 +107,7 @@ Public Class HTTPHandle
             cityList.Add(New cityInfo(_cityName, _districtName))
         End Sub
     End Structure
-    Structure cityInfo
+    Structure cityInfo  '城市信息  包含区列表
         Dim city As String
         Dim district As List(Of String)
         Sub New(ByVal _city As String)
@@ -121,7 +121,7 @@ Public Class HTTPHandle
         End Sub
     End Structure
 
-    Structure VLCTestInfo
+    Structure VLCTestInfo '旧版视频测试信息  已弃用
         Dim ID As Integer
         Dim Time As String
         Dim BusinessType As String
@@ -196,22 +196,11 @@ Public Class HTTPHandle
 
     ''设置web.config  System.Web.Configuration.WebConfigurationManager.AppSettings.Set("name", "name2");
     ''读取web.config  string name = System.Web.Configuration.WebConfigurationManager.AppSettings["name"];
+    '网络测试接口
     Public Function Handle_Test(ByVal context As HttpContext) As NormalResponse '测试
         Return New NormalResponse(True, "网络测试成功！这是返回处理信息", "这里返回错误信息", "这里返回数据")
     End Function
-    Public Function Handle_SetConfig(ByVal context As HttpContext) As NormalResponse '设置配置信息
-        Dim configName As String = context.Request.QueryString("configName")
-        Dim value As String = context.Request.QueryString("value")
-        System.Web.Configuration.WebConfigurationManager.AppSettings.Set(configName, value)
-        Return New NormalResponse(True, "设置成功")
-    End Function
-    Public Function Handle_GetConfig(ByVal context As HttpContext) As NormalResponse '获取配置信息
-        Dim configName As String = context.Request.QueryString("configName")
-        Dim sql As String = System.Web.Configuration.WebConfigurationManager.AppSettings(configName)
-        Return New NormalResponse(True, "", "", sql)
-    End Function
-
-
+    '获取测试组信息
     Public Function Handle_GetDtGroup(ByVal context As HttpContext) As NormalResponse '获取所有测试组信息 ,如果groupId不为空，则读取该组信息
         Dim Stepp As Single = 0
         Try
@@ -259,7 +248,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "GetDtGroup Err:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
-
+    '上传新的测试组信息
     Public Function Handle_UploadDtGroup(context As HttpContext, data As Object) As NormalResponse '保存DTGroup
         Dim Stepp As Integer = -1
         Try
@@ -322,7 +311,7 @@ Public Class HTTPHandle
         End Try
     End Function
 
-
+    '删除测试组
     Public Function Handle_DeleteDtGroup(ByVal context As HttpContext) As NormalResponse '删除测试组
         Try
             Dim groupID As String = context.Request.QueryString("groupID")
@@ -339,7 +328,7 @@ Public Class HTTPHandle
         End Try
     End Function
 
-
+    '更新测试组信息
     Public Function Handle_UpdateDtGroup(ByVal context As HttpContext) As NormalResponse '更新测试组
         Dim Stepp As Single = 0
         Try
@@ -413,7 +402,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "更新测试组错误 Err:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
-
+    '上传铁塔工参
     Public Function Handle_UploadTtLteCellInfo(context As HttpContext, data As Object) As NormalResponse '保存铁塔Lte工参
         Dim Stepp As Integer = -1
         Try
@@ -479,7 +468,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "Upload TtLteCellInfo Err Step=" & Stepp & " " & ex.ToString)
         End Try
     End Function
-
+    '上传LTE工参
     Public Function Handle_UploadLteCellInfo(context As HttpContext, data As Object) As NormalResponse '保存运营商Lte工参
         Dim Stepp As Integer = -1
         Try
@@ -548,13 +537,13 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "UploadLTECellInfoErr,Step=" & Stepp & " Err=" & ex.ToString)
         End Try
     End Function
-    Structure LocalTestInfo
+    Structure LocalTestInfo '离线数据上传信息
         Public id As Integer
         Public time As String
         Public json As String
         Public type As String
     End Structure
-
+    '上传离线数据
     Public Function Handle_UploadofflineDatas(context As HttpContext, data As Object) As NormalResponse  ''处理离线上传包
         Try
             ' Dim str As String = JsonConvert.SerializeObject(data)
@@ -622,7 +611,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
-    'Android app上传SDK数据 
+    'Android app上传QOER数据 
     Public Function Handle_UploadPhoneInfo(context As HttpContext, data As Object) As NormalResponse
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -669,7 +658,7 @@ Public Class HTTPHandle
             pi.businessType = ""
         End If
         If pi.apkName = "" Then
-            pi.apkName = "众手测试"
+            pi.apkName = "UniQoE"
         End If
         row("MNC".ToUpper) = pi.MNC
         row("wifi_SSID".ToUpper) = pi.wifi_SSID
@@ -679,9 +668,7 @@ Public Class HTTPHandle
         row("FREQ".ToUpper) = pi.FREQ
         row("cpu".ToUpper) = pi.cpu
         row("ADJ_SIGNAL".ToUpper) = pi.ADJ_SIGNAL
-        row("Adj_ECI1".ToUpper) = pi.Adj_ECI1
-        row("Adj_RSRP1".ToUpper) = pi.Adj_RSRP1
-        row("Adj_SINR1".ToUpper) = pi.Adj_SINR1
+
         row("isScreenOn".ToUpper) = pi.isScreenOn
         row("isGPSOpen".ToUpper) = pi.isGPSOpen
 
@@ -723,7 +710,7 @@ Public Class HTTPHandle
                     row("CITY".ToUpper) = la.City
                     row("DISTRICT".ToUpper) = la.District
                     row("ADDRESS".ToUpper) = la.DetailAddress
-
+                    HandleProAndCity(la.Province, la.City, la.District)
                     pi.province = la.Province
                     pi.city = la.City
                     pi.district = la.District
@@ -751,6 +738,23 @@ Public Class HTTPHandle
 
         row("grid".ToUpper) = GetGridBySQL(pi.lon, pi.lat)
         row("QOER") = GetQoerPingScore(pi.PING_AVG_RTT)
+        row("enodebId_cellId".ToUpper) = pi.eNodeBId & "_" & pi.cellId
+        row("PHONE_SCREEN_BRIGHTNESS".ToUpper) = pi.PHONE_SCREEN_BRIGHTNESS
+        row("EARFCN".ToUpper) = pi.EARFCN
+        row("PHONE_ELECTRIC".ToUpper) = pi.PHONE_ELECTRIC
+        If IsNothing(pi.neighbourList) = False Then
+            Dim nb As List(Of Neighbour) = pi.neighbourList
+            If nb.Count > 0 Then
+                Dim neighbor As Neighbour = nb(0)
+                row("Adj_PCI1".ToUpper) = neighbor.PCI
+                row("Adj_RSRP1".ToUpper) = neighbor.RSRP
+                row("Adj_EARFCN1".ToUpper) = neighbor.EARFCN
+            End If
+        End If
+        If IsNothing(pi.xyZaSpeed) = False Then
+            Dim json As String = JsonConvert.SerializeObject(pi.xyZaSpeed)
+            row("xyZaSpeed".ToUpper) = json
+        End If
         Try
             DeviceHelper.ChangeDeviceStatus(pi)
         Catch ex As Exception
@@ -766,7 +770,7 @@ Public Class HTTPHandle
             Return np
         End If
     End Function
-
+    'Android app上传QOE_VIDEO数据 
     Public Function Handle_UploadQoEVideoInfo(context As HttpContext, data As Object) As NormalResponse 'Android 上传QoEVideo
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -799,10 +803,9 @@ Public Class HTTPHandle
         row("FREQ".ToUpper) = qoe.FREQ
         row("cpu".ToUpper) = qoe.cpu
         row("ADJ_SIGNAL".ToUpper) = qoe.ADJ_SIGNAL
-        row("Adj_ECI1".ToUpper) = qoe.Adj_ECI1
-        row("Adj_RSRP1".ToUpper) = qoe.Adj_RSRP1
-        row("Adj_SINR1".ToUpper) = qoe.Adj_SINR1
         row("isScreenOn".ToUpper) = qoe.isScreenOn
+
+
 
         row("ISUPLOADDATATIMELY") = qoe.ISUPLOADDATATIMELY
         row("DATETIME".ToUpper) = qoe.DATETIME
@@ -883,15 +886,7 @@ Public Class HTTPHandle
             row("CELL_SIGNAL_STRENGTH".ToUpper) = JsonConvert.SerializeObject(qoe.CELL_SIGNAL_STRENGTHList)
         End If
         If IsNothing(qoe.ACCELEROMETER_DATAList) = False Then
-            Dim recordValue As String = ""
-            For i = 0 To qoe.ACCELEROMETER_DATAList.Count - 1
-                If qoe.ACCELEROMETER_DATAList(i) <> 0 Then
-                    recordValue = qoe.ACCELEROMETER_DATAList(i)
-                Else
-                    qoe.ACCELEROMETER_DATAList(i) = recordValue
-                End If
-            Next
-            row("ACCELEROMETER_DATA".ToUpper) = JsonConvert.SerializeObject(qoe.ACCELEROMETER_DATAList) '
+            row("ACCELEROMETER_DATA".ToUpper) = JsonConvert.SerializeObject(qoe.ACCELEROMETER_DATAList)
         End If
         If IsNothing(qoe.INSTAN_DOWNLOAD_SPEEDList) = False Then
             Dim recordValue As Long
@@ -938,18 +933,18 @@ Public Class HTTPHandle
                 row(("SIGNAL_INFO" & i + 1).ToUpper) = recordValue
             Next
         End If
-        If IsNothing(qoe.ADJList) = False Then
-            Dim recordValue As New QoEVideoInfo.ADJInfo
-            recordValue.ECI = 0
-            recordValue.RSRP = 0
-            For i = 0 To 5
-                If qoe.ADJList.Count > i Then
-                    recordValue = qoe.ADJList(i)
-                End If
-                row(("ADJ_ECI" & i + 1).ToUpper) = recordValue.ECI
-                row(("ADJ_RSRP" & i + 1).ToUpper) = recordValue.RSRP
-            Next
-        End If
+        'If IsNothing(qoe.ADJList) = False Then
+        '    Dim recordValue As New QoEVideoInfo.ADJInfo
+        '    recordValue.ECI = 0
+        '    recordValue.RSRP = 0
+        '    For i = 0 To 5
+        '        If qoe.ADJList.Count > i Then
+        '            recordValue = qoe.ADJList(i)
+        '        End If
+        '        row(("ADJ_ECI" & i + 1).ToUpper) = recordValue.ECI
+        '        row(("ADJ_RSRP" & i + 1).ToUpper) = recordValue.RSRP
+        '    Next
+        'End If
         If IsNothing(qoe.STALLlist) = False Then
             Dim recordValue As New QoEVideoInfo.STALLInfo
             recordValue.TIME = 0
@@ -962,6 +957,24 @@ Public Class HTTPHandle
                 row(("STALL_DURATION_LONG_POINT_" & i + 1).ToUpper) = recordValue.POINT
             Next
         End If
+        Dim pi As PhoneInfo = qoe.pi
+        If IsNothing(pi) = False Then
+            row("PHONE_SCREEN_BRIGHTNESS".ToUpper) = pi.PHONE_SCREEN_BRIGHTNESS
+            If IsNothing(pi.neighbourList) = False Then
+                If pi.neighbourList.Count > 0 Then
+                    row("Adj_PCI1".ToUpper) = pi.neighbourList(0).PCI
+                    row("Adj_RSRP1".ToUpper) = pi.neighbourList(0).RSRP
+                    row("Adj_EARFCN1".ToUpper) = pi.neighbourList(0).EARFCN
+                    For i = 0 To 5
+                        If pi.neighbourList.Count > i + 1 Then
+                            row(("ADJ_PCI" & i + 1).ToUpper) = pi.neighbourList(i).PCI
+                            row(("ADJ_RSRP" & i + 1).ToUpper) = pi.neighbourList(i).RSRP
+                        End If
+                    Next
+                End If
+            End If
+        End If
+
         row("ACCMIN".ToUpper) = qoe.ACCMIN
         row("USERSCENE".ToUpper) = qoe.USERSCENE
         row("MOVE_SPEED".ToUpper) = qoe.MOVE_SPEED
@@ -1090,7 +1103,7 @@ Public Class HTTPHandle
 
         Return qoe
     End Function
-
+    'Android app上传QOE_HTTP数据 
     Public Function Handle_UploadQoEHTTPInfo(ByVal context As HttpContext, ByVal data As Object) As NormalResponse ''上传QOE HTTP Table
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -1225,225 +1238,6 @@ Public Class HTTPHandle
         End If
     End Function
 
-
-
-
-    Public Function Handle_UploadVLCTestInfo(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '上传VLC
-        Try
-            Dim str As String = JsonConvert.SerializeObject(data)
-            Dim pinfo As VLCTestInfo = JsonConvert.DeserializeObject(str, GetType(VLCTestInfo))
-            If IsNothing(pinfo) Then Return New NormalResponse(False, "VLCTestInfo格式非法")
-            If pinfo.VIDEO_TOTAL_TIME > 0 Then
-                pinfo.BVRate = 100 * pinfo.Video_BUFFER_TOTAL_TIME / pinfo.VIDEO_TOTAL_TIME
-            End If
-            If pinfo.RSRP > 0 Then
-                pinfo.RSRP = 0 - pinfo.RSRP
-            End If
-            If pinfo.Video_Stall_TOTAL_TIME <= 0 Then
-                pinfo.Video_Stall_Num = 0
-            Else
-                If pinfo.Video_Stall_Num <= 0 Then
-                    pinfo.Video_Stall_Num = 1
-                End If
-                Dim f As Single = 100 * pinfo.Video_Stall_TOTAL_TIME / (pinfo.Video_Stall_TOTAL_TIME + pinfo.VIDEO_TOTAL_TIME)
-                pinfo.Video_Stall_Duration_Proportion = f
-            End If
-            If pinfo.BusinessType = "众手测试" Then
-                Dim phi As PhoneInfo = VLCInfoToPhoneInfo(pinfo)
-                If IsNothing(phi) = False Then
-                    Dim np As NormalResponse = InsertPhoneInfoToOracle(phi)
-                    Return np
-                End If
-            End If
-            Dim np3 As NormalResponse = InsertVLCTestInfoToOracle(pinfo)
-            Return np3
-        Catch ex As Exception
-            Dim np As New NormalResponse(False, ex.Message, "", "")
-            Return np
-        End Try
-        Dim np2 As New NormalResponse(False, "err code=501", "", "")
-        Return np2
-    End Function
-
-    Private Function InsertVLCTestInfoToOracle(pinfo As VLCTestInfo) As NormalResponse '以前表
-        Dim sql As String = "select * from vlcMonitorTable "
-        sql = OracleSelectPage(sql, 0, 2)
-        Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-        If IsNothing(dt) Then
-            Return New NormalResponse(False, "数据表不存在")
-        End If
-        dt.Rows.Clear()
-        If dt.Columns.Contains("RN") Then
-            dt.Columns.Remove("RN")
-        End If
-        Dim row As DataRow = dt.NewRow
-        row("ID".ToUpper) = 0
-        row("Time".ToUpper) = Now.ToString("yyyy-MM-dd HH:mm:ss")
-        If pinfo.BusinessType = "" Then
-            pinfo.BusinessType = "SDK"
-        End If
-        If pinfo.apkName = "" Then
-            pinfo.apkName = "众手测试"
-        End If
-        Dim BusinessType As String = pinfo.BusinessType
-        If IsNothing(BusinessType) Then BusinessType = ""
-        If BusinessType = "" Then BusinessType = "流媒体"
-        row("BusinessType".ToUpper) = BusinessType
-        row("Video_BUFFER_INIT_TIME".ToUpper) = pinfo.Video_BUFFER_INIT_TIME
-        row("Video_BUFFER_TOTAL_TIME".ToUpper) = pinfo.Video_BUFFER_TOTAL_TIME
-        row("Video_Stall_Num".ToUpper) = pinfo.Video_Stall_Num
-        row("Video_Stall_TOTAL_TIME".ToUpper) = pinfo.Video_Stall_TOTAL_TIME
-        If IsNothing(pinfo.IMSI) = False Then row("IMSI".ToUpper) = pinfo.IMSI
-        If IsNothing(pinfo.IMEI) = False Then row("IMEI".ToUpper) = pinfo.IMEI
-        row("Video_Stall_Num".ToUpper) = pinfo.Video_Stall_Num
-        row("Video_Stall_Duration_Proportion".ToUpper) = pinfo.Video_Stall_Duration_Proportion
-        Dim Video_LOAD_Score As Integer = GetVideo_LOAD_Score(pinfo.Video_BUFFER_INIT_TIME, pinfo.VIDEO_TOTAL_TIME)
-        Dim Video_STALL_Score As Integer = GetVideo_STALL_Score(pinfo.Video_Stall_TOTAL_TIME, pinfo.Video_Stall_Num, pinfo.VIDEO_TOTAL_TIME)
-        row("Video_LOAD_Score".ToUpper) = Video_LOAD_Score
-        row("Video_STALL_Score".ToUpper) = Video_STALL_Score
-        row("USER_Score".ToUpper) = pinfo.USER_Score
-        row("VMOS".ToUpper) = GetVMOS(Video_LOAD_Score, Video_STALL_Score)
-        row("Packet_loss".ToUpper) = pinfo.Packet_loss
-        row("CARRIER".ToUpper) = pinfo.CARRIER
-        row("PLMN".ToUpper) = pinfo.PLMN
-        row("MCC".ToUpper) = pinfo.MCC
-        row("MNC".ToUpper) = pinfo.MNC
-        row("tac".ToUpper) = pinfo.tac
-        row("enodebid".ToUpper) = pinfo.enodebid
-        row("cellid".ToUpper) = pinfo.cellid
-        row("RSRP".ToUpper) = pinfo.RSRP
-        row("SINR".ToUpper) = pinfo.SINR
-        row("phoneName".ToUpper) = pinfo.phoneName
-        row("phoneModel".ToUpper) = pinfo.phoneModel
-        row("OS".ToUpper) = pinfo.OS
-        row("PHONE_ELECTRIC_START".ToUpper) = pinfo.PHONE_ELECTRIC_START
-        row("PHONE_ELECTRIC_END".ToUpper) = pinfo.PHONE_ELECTRIC_END
-        row("LON".ToUpper) = pinfo.LON
-        row("LAT".ToUpper) = pinfo.LAT
-        If pinfo.LON > 0 And pinfo.LAT > 0 Then
-            Dim c As CoordInfo = GPS2BDS(pinfo.LON, pinfo.LAT)
-            row("BDLON".ToUpper) = c.x
-            row("BDLAT".ToUpper) = c.y
-            c = GPS2GDS(pinfo.LON, pinfo.LAT)
-            row("GDLON".ToUpper) = c.x
-            row("GDLAT".ToUpper) = c.y
-            If True Then
-                Dim la As LocationAddressInfo = GetAddressByLngLat(pinfo.LON, pinfo.LAT)
-                If IsNothing(la) = False Then
-                    row("COUNTRY".ToUpper) = "中国"
-                    row("PROVINCE".ToUpper) = la.Province
-                    row("CITY".ToUpper) = la.City
-                    row("DISTRICT".ToUpper) = la.District
-                    row("ADDRESS".ToUpper) = la.DetailAddress
-                End If
-            End If
-        Else
-            row("BDLON".ToUpper) = 0
-            row("BDLAT".ToUpper) = 0
-            row("GDLON".ToUpper) = 0
-            row("GDLAT".ToUpper) = 0
-        End If
-        'Dim accuracy As Double
-        'Dim altitude As Double
-        'Dim speed As Double
-        'Dim satelliteCount As Integer
-        If dt.Columns.Contains("accuracy".ToUpper) Then row("accuracy".ToUpper) = pinfo.accuracy
-        If dt.Columns.Contains("altitude".ToUpper) Then row("altitude".ToUpper) = pinfo.altitude
-        If dt.Columns.Contains("speed".ToUpper) Then row("speed".ToUpper) = pinfo.speed
-        If dt.Columns.Contains("satelliteCount".ToUpper) Then row("satelliteCount".ToUpper) = pinfo.satelliteCount
-        Dim isOutside As Integer = 0
-        If pinfo.satelliteCount > 3 Then isOutside = 1
-        If dt.Columns.Contains("isOutside".ToUpper) Then row("isOutside".ToUpper) = isOutside
-
-        row("LON_END".ToUpper) = pinfo.LON_END
-        row("LAT_END".ToUpper) = pinfo.LAT_END
-
-        'row("COUNTRY".toupper) = pinfo.COUNTRY
-        'row("PROVINCE".toupper) = pinfo.PROVINCE
-        'row("CITY".toupper) = pinfo.CITY
-        'row("ADDRESS".toupper) = pinfo.ADDRESS
-
-        row("netType".ToUpper) = pinfo.netType
-        row("SCREEN_RESOLUTION_LONG".ToUpper) = pinfo.SCREEN_RESOLUTION_LONG
-        row("SCREEN_RESOLUTION_WIDTH".ToUpper) = pinfo.SCREEN_RESOLUTION_WIDTH
-        row("VIDEO_CLARITY".ToUpper) = pinfo.VIDEO_CLARITY
-        row("VIDEO_CODING_FORMAT".ToUpper) = pinfo.VIDEO_CODING_FORMAT
-        row("VIDEO_BITRATE".ToUpper) = pinfo.VIDEO_BITRATE
-        row("FPS".ToUpper) = pinfo.FPS
-        row("VIDEO_TOTAL_TIME".ToUpper) = pinfo.VIDEO_TOTAL_TIME
-        row("VIDEO_PLAY_TOTAL_TIME".ToUpper) = pinfo.VIDEO_PLAY_TOTAL_TIME
-        row("preparedTime".ToUpper) = pinfo.preparedTime
-        row("BVRate".ToUpper) = pinfo.BVRate
-        row("STARTTIME".ToUpper) = pinfo.STARTTIME
-        row("file_Len".ToUpper) = pinfo.file_Len
-        row("File_NAME".ToUpper) = pinfo.File_NAME
-        row("LIGHT_INTENSITY".ToUpper) = pinfo.LIGHT_INTENSITY
-        row("PHONE_SCREEN_BRIGHTNESS".ToUpper) = pinfo.PHONE_SCREEN_BRIGHTNESS
-        row("SIGNAL_Info".ToUpper) = pinfo.SIGNAL_Info
-        row("ENVIRONMENTAL_NOISE".ToUpper) = pinfo.ENVIRONMENTAL_NOISE
-        row("Called_Num".ToUpper) = pinfo.Called_Num
-        row("PING_AVG_RTT".ToUpper) = pinfo.PING_AVG_RTT
-        row("ACCELEROMETER_DATA".ToUpper) = pinfo.ACCELEROMETER_DATA
-        row("INSTAN_DOWNLOAD_SPEED".ToUpper) = pinfo.INSTAN_DOWNLOAD_SPEED
-        row("VIDEO_SERVER_IP".ToUpper) = pinfo.VIDEO_SERVER_IP
-        row("UE_INTERNAL_IP".ToUpper) = pinfo.UE_INTERNAL_IP
-        row("MOVE_SPEED".ToUpper) = pinfo.MOVE_SPEED
-        row("apkVersion".ToUpper) = pinfo.apkVersion
-        If dt.Columns.Contains("apkName".ToUpper) Then row("apkName".ToUpper) = pinfo.apkName
-        If dt.Columns.Contains("businessType".ToUpper) Then row("businessType".ToUpper) = pinfo.BusinessType
-        row("Video_Buffer_Total_Score".ToUpper) = GetVideo_Buffer_Total_Score(pinfo)
-        dt.Rows.Add(row)
-        Dim BDLON As Double = 0
-        Dim BDLAT As Double = 0
-        Try
-            BDLON = row("BDLON".ToUpper)
-            BDLAT = row("BDLAT".ToUpper)
-        Catch ex As Exception
-
-        End Try
-        '  HandleGetNewPIByPhoneModel(pinfo.phoneModel, pinfo.RSRP, row("Time"), BDLON, BDLAT)
-        Dim result As String = ORALocalhost.SqlCMDListQuickByPara("vlcMonitorTable", dt)
-        If result = "success" Then
-            Dim np As New NormalResponse(True, "success", "", "")
-            Return np
-        Else
-            Dim np As New NormalResponse(False, result, "", "")
-            Return np
-        End If
-    End Function
-    Private Function VLCInfoToPhoneInfo(vlc As VLCTestInfo) As PhoneInfo
-        If IsNothing(vlc) Then Return Nothing
-        Dim pi As New PhoneInfo
-        pi.businessType = vlc.BusinessType
-        pi.phoneModel = vlc.phoneModel
-        pi.phoneName = vlc.phoneName
-        pi.phoneOS = vlc.OS
-        pi.phonePRODUCT = ""
-        pi.carrier = vlc.CARRIER
-        pi.IMSI = vlc.IMSI
-        pi.IMEI = vlc.IMEI
-        pi.RSRP = vlc.RSRP
-        pi.SINR = vlc.SINR
-        pi.RSRQ = 0
-        pi.TAC = vlc.tac
-        pi.PCI = 0
-        pi.CI = 0
-        pi.eNodeBId = vlc.enodebid
-        pi.cellId = vlc.cellid
-        pi.netType = vlc.netType
-        pi.sigNalType = vlc.netType
-        pi.sigNalInfo = vlc.SIGNAL_Info
-        pi.lon = vlc.LON
-        pi.lat = vlc.LAT
-        pi.accuracy = vlc.accuracy
-        pi.altitude = vlc.altitude
-        pi.gpsSpeed = vlc.speed
-        pi.satelliteCount = vlc.satelliteCount
-        pi.address = vlc.ADDRESS
-        pi.apkVersion = vlc.apkVersion
-        pi.apkName = vlc.apkName
-        Return pi
-    End Function
     Private Sub HandleGetNewPIByPhoneModel(phoneModel As String, RSRP As Double, time As String, lon As Double, lat As Double)
         Dim th As New Thread(Sub()
                                  Try
@@ -1478,7 +1272,7 @@ Public Class HTTPHandle
 
     End Sub
 
-    '视频加载分
+    '视频加载评分
     Private Function GetVideo_LOAD_Score(loadTime As Long, totalTime As Long) As Single
         Dim Score As Single = 1
         If loadTime <= 100 Then Score = 5
@@ -1496,7 +1290,7 @@ Public Class HTTPHandle
         End If
         Return Score
     End Function
-
+    '视频卡顿评分
     Private Function GetVideo_STALL_Score(stallTime As Long, stallCount As Integer, totalTime As Long) As Integer
         Dim Score As Single = 1
         Dim p As Double = 100 * stallTime / totalTime
@@ -1516,7 +1310,7 @@ Public Class HTTPHandle
 
         Return Score
     End Function
-
+    '缓存评分
     Private Function GetVideo_Buffer_Total_Score(ByVal pinfo As VLCTestInfo) As Integer
         If pinfo.BVRate < 10 Then Return 5
         If pinfo.BVRate < 30 Then Return 4
@@ -1524,11 +1318,13 @@ Public Class HTTPHandle
         If pinfo.BVRate < 70 Then Return 2
         Return 1
     End Function
+    'VMOS 总评分
     Private Function GetVMOS(ByVal Video_LOAD_Score As Integer, ByVal Video_STALL_Score As Integer) As Single
         Dim d As Double = 0.5 * Video_LOAD_Score + 0.5 * Video_STALL_Score
         'Dim i As Single = Math.Ceiling(d)
         Return d
     End Function
+    'HTTP响应时间的评分
     Private Function GetQoEHttpResponseScore(responseRime As Long) As Integer
         If (responseRime > 5000) Then Return 1
         If (responseRime > 3000) Then Return 2
@@ -1537,7 +1333,7 @@ Public Class HTTPHandle
 
         Return 5
     End Function
-
+    'ping评分
     Private Function GetQoerPingScore(time As Single) As Integer
         If (time > 1000) Then Return 1
         If (time > 500) Then Return 2
@@ -1546,7 +1342,7 @@ Public Class HTTPHandle
 
         Return 5
     End Function
-
+    '获取QOER所有入网设备信息
     Public Function Handle_GetQoeReportDevices(ByVal context As HttpContext) As NormalResponse '获取手机型号
         Try
             Dim sql As String = "SELECT phoneModel from QOE_REPORT_TABLE GROUP BY phoneModel"
@@ -1560,6 +1356,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
+    '获取某个设备最新的测试数据点
     Public Function Handle_GetNewPointByPhoneModel(ByVal context As HttpContext) As NormalResponse '按手机型号获取点
         Try
             Dim phoneModel As String = context.Request.QueryString("phoneModel")
@@ -1618,7 +1415,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
-
+    '获取QoEHTTP业务数据
     Public Function Handle_GetQoeHttpPoint(ByVal context As HttpContext) As NormalResponse '获得Http Qoe数据  Old Name :Handle_GetHttpQoePoint      New： 
         Dim Stepp As Single = 0
         Try
@@ -1757,7 +1554,7 @@ Public Class HTTPHandle
         End Try
     End Function
 
-
+    '获取QoE视频业务数据
     Public Function Handle_GetQoeVideoPoint(ByVal context As HttpContext) As NormalResponse '获得Qoe数据  Old Name :Handle_GetQoePoint      New： Handle_GetQoeVideoPoint
         Dim Stepp As Single = 0
         Try
@@ -1895,18 +1692,15 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "GetQoePointErr:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
-
-
+    '获取QoER的省市区结构
     Public Function Handle_GetQoeReportProAndCity(ByVal context As HttpContext) As NormalResponse '获取SDK中运营商的省、市、区信息
         Try
-            'Dim carrier As String = context.Request.QueryString("carrier") '运营商 {‘中国联通’,'中国移动','中国电信'}
-
-            'If carrier.Length = 0 Then
-            '    Return New NormalResponse(False, "必须指定运营商，eg：‘中国联通’,'中国移动','中国电信'")
-            'End If
-
-            Dim sql As String = "select province,city,district from QOE_REPORT_TABLE GROUP BY province,city,district order by province asc"
+            Dim sb As New StringBuilder
+            Dim startTime As Date = Now
+            Dim sql As String = "select province,city,district from proAndcityTable order by province asc"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            sb.AppendLine("查询数据库:" & GetTimeSpam(startTime))
+            startTime = Now
             If IsNothing(dt) Then
                 Return New NormalResponse(False, "没有任何数据")
             End If
@@ -1944,8 +1738,9 @@ Public Class HTTPHandle
                     End If
                 End If
             Next
-
-            Return New NormalResponse(True, "", "", list)
+            sb.AppendLine("归类计算:" & GetTimeSpam(startTime))
+            startTime = Now
+            Return New NormalResponse(True, sb.ToString, "", list)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try
@@ -2041,7 +1836,7 @@ Public Class HTTPHandle
     End Function
 
 
-
+    '获取UEQoEReport数据
     Public Function Handle_GetUeQoeReportRSRPPoint(ByVal context As HttpContext) As NormalResponse '获得用户QoeReport数据 
         Dim Stepp As Single = 0
         Try
@@ -2131,6 +1926,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "GetUeQoeReportRSRPPoint Err:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
+    '获取铁塔工参
     Public Function Handle_GetTtLteCellInfo(ByVal context As HttpContext) As NormalResponse '获得运营商4G小区工参
         Dim Stepp As Integer = 0
         Try
@@ -2192,7 +1988,7 @@ Public Class HTTPHandle
     End Function
 
 
-
+    '获取LTE工参
     Public Function Handle_GetLteCellInfo(ByVal context As HttpContext) As NormalResponse '获得运营商4G小区工参
         Dim Stepp As Integer = 0
         Try
@@ -2269,7 +2065,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, "GetLteCellInfo Err:" & ex.Message & ",Step=" & Stepp)
         End Try
     End Function
-
+    '获取MR网格列表
     Public Function Handle_GetMRGridlist(ByVal context As HttpContext) As NormalResponse  '获取MR的网格列表
         Try
             Dim sql As String = "select grid from maomingMRTable GROUP BY grid"
@@ -2293,7 +2089,7 @@ Public Class HTTPHandle
         End Try
     End Function
 
-
+    '获取MR数据表的省市区结构
     Public Function Handle_GetMRProAndCity(ByVal context As HttpContext) As NormalResponse '获取茂名MR省、市、区
         Try
             Dim sql As String = "select province,city,district from maomingMRTable GROUP BY province,city,district"
@@ -2341,7 +2137,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '获取MR数据
     Public Function Handle_GetMRPoint(ByVal context As HttpContext) As NormalResponse  '给前端返回MR数据 主要业务
         Try
             Dim province As String = context.Request.QueryString("province")
@@ -2502,7 +2298,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '获取某基站的性能数据
     Public Function Handle_GetENodeBIdYMData(context As HttpContext) As NormalResponse '获取Enodebid、cellid性能指标
         Try
             Dim eNodeBId As String = context.Request.QueryString("eNodeBId")
@@ -2575,6 +2371,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
+    'oracle分页封装
     Private Function OracleSelectPage(sql As String, startIndex As Long, count As Long) As String
         Dim sb As New StringBuilder
         sb.Append("select * from ( ")
@@ -2585,10 +2382,11 @@ Public Class HTTPHandle
         sb.Append("where RN>=" & startIndex)
         Return sb.ToString
     End Function
-    Structure RunSQLInfo
+    Structure RunSQLInfo  '运行SQL结构信息
         Dim connStr As String
         Dim sqllist As List(Of String)
     End Structure
+    '解压数据
     Private Function Decompress(ByVal data() As Byte) As Byte()
         Dim stream As MemoryStream = New MemoryStream
         Dim gZip As New GZipStream(New MemoryStream(data), CompressionMode.Decompress)
@@ -2602,6 +2400,7 @@ Public Class HTTPHandle
         gZip.Close()
         Return stream.ToArray
     End Function
+    '前端执行SQL语句，！！！仅用于调试开发阶段使用！！！
     Public Function Handle_RunSQL(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '按Sql来查询
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "sql is null")
@@ -2639,6 +2438,7 @@ Public Class HTTPHandle
             Me.base64 = base64
         End Sub
     End Structure
+    '上传MR原文件
     Public Function Handle_UploadMRFile(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '上传MR文件
         Try
             Dim startTime As Date = Now
@@ -2662,6 +2462,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
+    '处理MR XML数据
     Private Function HandleXMLfile(xmlstring As String, eNodeBIdInsert As String, cellinfoInsert As cellInfo) As NormalResponse '处理XML文件
         ' If File.Exists(filePath) = False Then Return
 
@@ -2774,8 +2575,7 @@ Public Class HTTPHandle
         Dim grid As String
         Dim siteType As Integer
     End Structure
-
-
+    '上传MR数据
     Public Function Handle_UploadMRData(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '上传MR数据
         Try
             Dim str As String = data.ToString
@@ -2814,6 +2614,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
+    '删除性能数据
     Public Function Handle_DeleteMMYMDataByTime(ByVal context As HttpContext) As NormalResponse '通过时间条件 删除茂名KPI数据
         Try
             Dim time As String = context.Request.QueryString("time")
@@ -2834,6 +2635,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
+    '上传性能数据
     Public Function Handle_UploadMMYMData(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '增加茂名KPI数据
         Try
             Dim str As String = data.ToString
@@ -2856,7 +2658,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.Message)
         End Try
     End Function
-
+    '识别栅格
     Private Function GetGridBySQL(lon As Double, lat As Double) As Integer
         Dim sql As String = "select id from grid_Table where startlon<=" & lon & " and stoplon>=" & lon & " and startlat<=" & lat & " and stoplat>=" & lat
         Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
@@ -2869,9 +2671,11 @@ Public Class HTTPHandle
         If IsNumeric(str) = False Then Return 0
         Return str
     End Function
+    '获取一个随机整数
     Private Function GetAoARand() As Integer
         Return Int(Rnd() * 121) - 60
     End Function
+    '处理MR表
     Private Function HandleMRDt(dt As DataTable) As DataTable
         If IsNothing(dt) Then Return dt
         'Dim sqlList As New List(Of String)
@@ -2978,6 +2782,7 @@ Public Class HTTPHandle
         s = s * 6378.137
         Return Math.Round(s * 1000, 2)
     End Function
+    '计算耗时
     Private Function GetTimeSpam(ByVal t As Date) As String
         Dim endTime As Date = Now
         Dim ts As TimeSpan = endTime - t
@@ -3001,11 +2806,6 @@ Public Class HTTPHandle
     Public Function Handle_GetIndexPageTable(context As HttpContext) As NormalResponse '2018-12-23 09:54:00 更新 增加首页拼接表
         Dim info As String
         Try
-            'Dim count As String = context.Request.QueryString("count")
-            'If count = "" Then count = 10
-            'If IsNumeric(count) = False Then
-            '    Return New NormalResponse(False, "count 非数字")
-            'End If
             Dim sb As New StringBuilder
             Dim workStartTime As Date = Now
             Dim sql As String = "select day from QOE_REPORT_TABLE GROUP BY day ORDER BY day desc"
@@ -3294,7 +3094,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '获取首页表格数据 备用接口
     Public Function Handle_GetIndexPageTable0(context As HttpContext) As NormalResponse '2018-12-23 更新 增加首页拼接表
         Try
             'Dim count As String = context.Request.QueryString("count")
@@ -3381,7 +3181,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '获取视频资源
     Public Function Handle_GetQOEVideoSource(context As HttpContext) As NormalResponse '获取QOE视频源
         Try
             Dim sql As String = "select * from QOE_VIDEO_SOURCE where isuse=1"
@@ -3393,14 +3193,14 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-    Structure SysModuleInfo
+    Structure SysModuleInfo  '系统模板信息
         Dim id As String
         Dim dateTime As String
         Dim userName As String
         Dim type As String
         Dim content As String
     End Structure
-
+    '新增模板
     Public Function Handle_AddSysModule(context As HttpContext, data As Object) As NormalResponse '新建查询模板
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
@@ -3423,7 +3223,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '删除模板
     Public Function Handle_DeleteSysModule(context As HttpContext) As NormalResponse  '删除查询模板
         Try
             Dim id As String = context.Request.QueryString("id")
@@ -3445,7 +3245,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '修改模板
     Public Function Handle_UpdateSysModule(context As HttpContext, data As Object) As NormalResponse  '修改查询模板
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
@@ -3473,7 +3273,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '查询模板
     Public Function Handle_GetSysModule(context As HttpContext) As NormalResponse  '查询系统模板
         Try
             Dim sql As String = "select * from sys_module_table"
@@ -3490,7 +3290,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-
+    '查询否可以升级
     Public Function Handle_GetCanUpdate(context As HttpContext, data As Object) As NormalResponse
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -3533,6 +3333,7 @@ Public Class HTTPHandle
 
         End Try
     End Function
+    '比对两个版本号的高低
     Public Function CanUpdate(ByVal oldVersion As String, ByVal newVersion As String) As Boolean
         Dim oldv As New Version(oldVersion)
         Dim newv As New Version(newVersion)
@@ -3588,5 +3389,46 @@ Public Class HTTPHandle
         If IsNothing(permission) Then permission = 0
         If permission = "" Then permission = 0
         Return New NormalResponse(True, "", "", permission)
+    End Function
+    '手工刷新省市区
+    Public Function Handle_RefrushProAndCity(context As HttpContext) As NormalResponse
+        Try
+            DoMathProAndCity()
+            Return New NormalResponse(True, "success")
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Structure PiBridgeMsgInfo '测试信息  调试阶段使用
+        Dim msg As String
+        Dim PiId As String
+    End Structure
+    '上传测试信息  调试阶段使用
+    Public Function Handle_UploadPiBridgeMsg(context As HttpContext, data As Object) As NormalResponse
+        Try
+            Dim str As String = JsonConvert.SerializeObject(data)
+            Dim pm As PiBridgeMsgInfo = JsonConvert.DeserializeObject(str, GetType(PiBridgeMsgInfo))
+            If IsNothing(pm) Then
+                Return New NormalResponse(False, "PiBridgeMsgInfo 格式非法")
+            End If
+            Dim msg As String = pm.msg
+            Dim PiId As String = pm.PiId
+            If msg = "" Then
+                Return New NormalResponse(False, "PiBridgeMsgInfo.msg不能为空")
+            End If
+            If PiId = "" Then
+                Return New NormalResponse(False, "PiBridgeMsgInfo.PiId不能为空")
+            End If
+            Dim sql As String = "insert into PiBridgeTestTable(dateTime,msg,piid)values('{0}','{1}','{2}')"
+            sql = String.Format(sql, New String() {Now.ToString("yyyy-MM-dd HH:mm:ss"), msg, PiId})
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            If result = "success" Then
+                Return New NormalResponse(True, result)
+            Else
+                Return New NormalResponse(False, result)
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
     End Function
 End Class

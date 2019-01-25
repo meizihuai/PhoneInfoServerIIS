@@ -11,6 +11,8 @@ Imports MySql.Data.MySqlClient
 Imports ConvertGPS
 Imports OfficeOpenXml
 Imports System.Web
+Imports System.Threading
+Imports System.Threading.Thread
 
 Module Module2
     Public ConnectSQL As String = "server=localhost;DataBase=PhoneInfo;User ID=root;Pwd=Smart9080;charset='utf8'"
@@ -413,4 +415,44 @@ Module Module2
         End Try
         Return Nothing
     End Function
+    Public Sub DoMathProAndCity()
+        Dim sql As String = "select province,city,district from qoe_report_table group by province,city,district order by province asc"
+        Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+        If IsNothing(dt) Then
+            Return
+        End If
+        If dt.Rows.Count = 0 Then
+            Return
+        End If
+        For Each row As DataRow In dt.Rows
+            Dim province As String = row(0).ToString
+            Dim cityName As String = row(1).ToString
+            Dim districtName As String = row(2).ToString
+            SubHandleProAndCity(province, cityName, districtName)
+        Next
+    End Sub
+    Private Sub SubHandleProAndCity(province As String, city As String, district As String)
+        If province = "" Or city = "" Then Return
+        ' DoMathProAndCity()
+        'Dim count As String = ORALocalhost.SQLGetFirstRowCell("select count(*) from proAndcityTable")
+        'If IsNumeric(count) Then
+        '    If count = 0 Then
+        '        DoMathProAndCity()
+        '    End If
+        'End If
+        Dim sql As String = "select province from proAndcityTable where province='{0}' and city='{1}' and district='{2}'"
+        sql = String.Format(sql, New String() {province, city, district})
+        Dim isExist As Boolean = ORALocalhost.SqlIsIn(sql)
+        If isExist Then Return
+        sql = "insert into proAndcityTable (province,city,district) values ('{0}','{1}','{2}')"
+        sql = String.Format(sql, New String() {province, city, district})
+        ORALocalhost.SqlCMD(sql)
+    End Sub
+    Public Sub HandleProAndCity(province As String, city As String, district As String)
+        Dim th As New Thread(Sub()
+                                 '  DoMathProAndCity()
+                                 SubHandleProAndCity(province, city, district)
+                             End Sub)
+        th.Start()
+    End Sub
 End Module

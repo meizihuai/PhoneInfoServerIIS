@@ -65,7 +65,7 @@
     Public ENVIRONMENTAL_NOISE As String    '环境噪声
     Public VIDEO_AVERAGE_PEAK_RATE As Long    '/*视频平均下载速率=总下载量/视频播放时长(kb/s)*/
     Public CELL_SIGNAL_STRENGTHList As List(Of Integer)    '按0.5s采集一次，保存后集中上报
-    Public ACCELEROMETER_DATAList As List(Of String)  '/*重力感应数据=X/Y/Z轴的加速度
+    Public ACCELEROMETER_DATAList As List(Of XYZaSpeedInfo)  '/*重力感应数据=X/Y/Z轴的加速度
     Public INSTAN_DOWNLOAD_SPEEDList As List(Of Long)    '/*全程瞬时下载速率=每3s的下载量(kb)*/
     Public VIDEO_ALL_PEAK_RATEList As List(Of Long)   '/*全程阶段的峰值速率，下载量每秒（kb/s）*/
     Public GPSPointList As List(Of GPSPoint)    '/*GPS经度*/

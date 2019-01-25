@@ -15,6 +15,8 @@ Public Class PhoneInfo
     Public RSRQ As Double
     Public TAC As Integer
     Public PCI As Integer
+    Public EARFCN As Integer
+
     Public CI As Integer
     Public eNodeBId As Integer
     Public cellId As Integer
@@ -38,11 +40,15 @@ Public Class PhoneInfo
     Public FREQ As Double
     Public cpu As String
     Public ADJ_SIGNAL As String
+    Public neighbourList As List(Of Neighbour)
     Public Adj_ECI1 As Integer
     Public Adj_RSRP1 As Integer
     Public Adj_SINR1 As Integer
     Public isScreenOn As Integer
     Public isGPSOpen As Integer
+    Public PHONE_ELECTRIC As Integer
+    Public PHONE_SCREEN_BRIGHTNESS As Integer
+    Public xyZaSpeed As XYZaSpeedInfo
 
     Public province As String
     Public city As String
