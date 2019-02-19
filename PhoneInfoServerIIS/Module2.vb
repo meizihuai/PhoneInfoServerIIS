@@ -13,13 +13,14 @@ Imports OfficeOpenXml
 Imports System.Web
 Imports System.Threading
 Imports System.Threading.Thread
+Imports System.IO.Compression
 
 Module Module2
     Public ConnectSQL As String = "server=localhost;DataBase=PhoneInfo;User ID=root;Pwd=Smart9080;charset='utf8'"
     Public pgSQLLocalhost As New PgSQLHelper("localhost", 5432, "PhoneInfo", "mzh", "Smart9080")
     ' Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
     Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
-    Public apiVersion As String = "2.0.2"
+    Public apiVersion As String = "2.0.3"
     Structure normalResponse 'json回复格式
         Public result As Boolean
         Public msg As String
@@ -455,4 +456,30 @@ Module Module2
                              End Sub)
         th.Start()
     End Sub
+    Public Function Compress(ByVal data As Byte()) As Byte()
+        Try
+            Dim stream As MemoryStream = New MemoryStream()
+            Dim gZip As GZipStream = New GZipStream(stream, CompressionMode.Compress)
+            gZip.Write(data, 0, data.Length)
+            gZip.Close()
+            Return stream.ToArray()
+        Catch ex As Exception
+        End Try
+
+        Return Nothing
+    End Function
+
+    Public Function Decompress(ByVal data As Byte()) As Byte()
+        Try
+            Dim inputStream As MemoryStream = New MemoryStream(data)
+            Dim outStream As MemoryStream = New MemoryStream()
+            Dim zipStream As GZipStream = New GZipStream(inputStream, CompressionMode.Decompress)
+            zipStream.CopyTo(outStream)
+            zipStream.Close()
+            Return outStream.ToArray()
+        Catch ex As Exception
+        End Try
+
+        Return Nothing
+    End Function
 End Module

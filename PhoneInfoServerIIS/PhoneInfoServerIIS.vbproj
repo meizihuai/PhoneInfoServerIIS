@@ -134,6 +134,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Api\AppDataTrans.ashx.vb">
+      <DependentUpon>AppDataTrans.ashx</DependentUpon>
+    </Compile>
     <Compile Include="AppMission.vb" />
     <Compile Include="default.ashx.vb">
       <DependentUpon>default.ashx</DependentUpon>
@@ -189,6 +192,7 @@
     <Content Include="Dev\PhoneInfoSever.doc" />
     <Content Include="Dev\Record.xlsx" />
     <Content Include="Dev\1.表命名规则.xlsx" />
+    <Content Include="Api\AppDataTrans.ashx" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>

@@ -128,7 +128,7 @@ Public Class OracleHelper
             conn.Close()
             Return "success"
         Catch ex As Exception
-            File.WriteAllText("d:\oraerrCmd.txt", ex.ToString & vbCrLf & sql)
+            ' File.WriteAllText("d:\oraerrCmd.txt", ex.ToString & vbCrLf & sql)
             conn.Close()
 
             Return ex.Message
@@ -168,7 +168,7 @@ Public Class OracleHelper
             conn.Close()
             Return dt
         Catch ex As Exception
-            File.WriteAllText("d:\oraerrGet.txt", ex.ToString & vbCrLf & sql)
+            '   File.WriteAllText("d:\oraerrGet.txt", ex.ToString & vbCrLf & sql)
             conn.Close()
             Return dt
         End Try
