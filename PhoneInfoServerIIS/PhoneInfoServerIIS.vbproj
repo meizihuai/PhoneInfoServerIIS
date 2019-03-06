@@ -13,7 +13,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>PhoneInfoServerIIS</RootNamespace>
     <AssemblyName>PhoneInfoServerIIS</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MyType>Custom</MyType>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -27,6 +27,7 @@
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -36,6 +37,7 @@
     <OutputPath>bin\</OutputPath>
     <DocumentationFile>PhoneInfoServerIIS.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -45,6 +47,7 @@
     <OutputPath>bin\</OutputPath>
     <DocumentationFile>PhoneInfoServerIIS.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022,42353,42354,42355</NoWarn>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -83,11 +86,9 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Web.DynamicData" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
@@ -96,6 +97,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -122,6 +124,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dev\ReadMe.txt" />
+    <Content Include="Dev\UPlanApi\index.html" />
+    <Content Include="Dev\UPlanApi\interface.html" />
+    <Content Include="Dev\UPlanApi\js\geoutils.js" />
+    <Content Include="Dev\UPlanApi\js\jquery-3.2.1.js" />
+    <Content Include="Dev\UPlanApi\Untitled-1.txt" />
     <Content Include="Global.asax" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
@@ -137,20 +144,23 @@
     <Compile Include="Api\AppDataTrans.ashx.vb">
       <DependentUpon>AppDataTrans.ashx</DependentUpon>
     </Compile>
-    <Compile Include="AppMission.vb" />
+    <Compile Include="class\AppMission.vb" />
+    <Compile Include="class\IPLocationHelper.vb" />
+    <Compile Include="class\OneKeyTestInfo.vb" />
     <Compile Include="default.ashx.vb">
       <DependentUpon>default.ashx</DependentUpon>
     </Compile>
-    <Compile Include="DeviceHelper.vb" />
-    <Compile Include="GetNewPiHelper.vb" />
-    <Compile Include="GetNewPointByPhoneModelHelper.vb" />
+    <Compile Include="class\DeviceHelper.vb" />
+    <Compile Include="class\GetNewPiHelper.vb" />
+    <Compile Include="class\GetNewPointByPhoneModelHelper.vb" />
     <Compile Include="Global.asax.vb">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="HTTPHandle.vb" />
-    <Compile Include="MissionDog.vb" />
-    <Compile Include="Module2.vb" />
-    <Compile Include="Mod_Response.vb" />
+    <Compile Include="class\MissionDog.vb" />
+    <Compile Include="modules\Module2.vb" />
+    <Compile Include="modules\Mod_Response.vb" />
+    <Compile Include="modules\Mod_UnCheckTokenFuncs.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -170,14 +180,14 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Neighbour.vb" />
-    <Compile Include="NormalResponse.vb" />
-    <Compile Include="OracleHelper.vb" />
-    <Compile Include="PgSQLHelper.vb" />
-    <Compile Include="PhoneInfo.vb" />
-    <Compile Include="QoEHTTPInfo.vb" />
-    <Compile Include="QoEVideoInfo.vb" />
-    <Compile Include="XYZaSpeedInfo.vb" />
+    <Compile Include="class\Neighbour.vb" />
+    <Compile Include="class\NormalResponse.vb" />
+    <Compile Include="class\OracleHelper.vb" />
+    <Compile Include="class\PgSQLHelper.vb" />
+    <Compile Include="class\PhoneInfo.vb" />
+    <Compile Include="class\QoEHTTPInfo.vb" />
+    <Compile Include="class\QoEVideoInfo.vb" />
+    <Compile Include="class\XYZaSpeedInfo.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">
@@ -193,11 +203,14 @@
     <Content Include="Dev\Record.xlsx" />
     <Content Include="Dev\1.表命名规则.xlsx" />
     <Content Include="Api\AppDataTrans.ashx" />
+    <Content Include="Dev\接口列表.xlsx" />
+    <Content Include="Dev\UPlanApi\Record.xlsx" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
       <LastGenOutput>Application.Designer.vb</LastGenOutput>
     </None>
     <None Include="My Project\PublishProfiles\CustomProfile.pubxml" />
+    <None Include="My Project\PublishProfiles\FolderProfile.pubxml" />
     <None Include="My Project\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <CustomToolNamespace>My</CustomToolNamespace>

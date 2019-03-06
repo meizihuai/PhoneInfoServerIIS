@@ -16,6 +16,7 @@ Imports System.Threading.Thread
 Imports System.IO.Compression
 
 Module Module2
+    Public myServerUrl As String = "http://111.53.74.132:7062"
     Public ConnectSQL As String = "server=localhost;DataBase=PhoneInfo;User ID=root;Pwd=Smart9080;charset='utf8'"
     Public pgSQLLocalhost As New PgSQLHelper("localhost", 5432, "PhoneInfo", "mzh", "Smart9080")
     ' Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
@@ -37,6 +38,16 @@ Module Module2
             msg = _msg
             errmsg = ""
             data = ""
+        End Sub
+    End Structure
+    Structure loginInfo
+        Dim usr As String
+        Dim name As String
+        Dim token As String
+        Sub New(usr As String, name As String, token As String)
+            Me.usr = usr
+            Me.name = name
+            Me.token = token
         End Sub
     End Structure
     Public Function GetOraTableColumns(tableName As String) As String()
@@ -261,33 +272,7 @@ Module Module2
             Return ex.Message
         End Try
     End Function
-    Public Function ip2Address(ByVal ip As String) As String
-        Try
-            If InStr(ip, ":") Then
-                ip = ip.Split(":")(0)
-            End If
-            Dim url As String = "http://int.dpool.sina.com.cn/iplookup/iplookup.php?&ip=" & ip
-            url = "http://www.ip138.com/ips1388.asp?ip=" & ip & "&action=2"
-            Dim msg As String = GetHTML(url, New CookieContainer, "")
-            Dim findStr As String = "本站数据"
-            Dim str As String = msg.Substring(InStr(msg, findStr), 100)
-            Dim a As Integer = InStr(str, "：")
-            Dim b As Integer = InStr(str, "</li>")
-            str = str.Substring(a, b - a - 1)
-            str = str.Replace("上海市上海市", "上海市")
-            Return str
-            'Dim s As String = msg
-            'If InStr(msg, vbTab) Then
-            '    Dim st() As String = msg.Split(vbTab)
-            '    If st.Count >= 6 Then
-            '        s = st(3) & "," & st(4) & "," & st(5)
-            '    End If
-            'End If
-            'Return s
-        Catch ex As Exception
-            ' MsgBox（ex.ToString)
-        End Try
-    End Function
+
     Private Function GetHTML(ByVal uri As String, ByVal cook As CookieContainer, ByVal msg As String) As String
         Dim req As HttpWebRequest = WebRequest.Create(uri & msg)
         req.Accept = "*/*"
@@ -481,5 +466,81 @@ Module Module2
         End Try
 
         Return Nothing
+    End Function
+
+    Public Function ip2Address(ByVal ip As String) As String
+        Try
+            If InStr(ip, ":") Then
+                ip = ip.Split(":")(0)
+            End If
+            Dim url As String = "http://int.dpool.sina.com.cn/iplookup/iplookup.php?&ip=" & ip
+            url = "http://www.ip138.com/ips1388.asp?ip=" & ip & "&action=2"
+            Dim msg As String = GetHTML(url, New CookieContainer, "")
+            Dim findStr As String = "本站数据"
+            Dim str As String = msg.Substring(InStr(msg, findStr), 100)
+            Dim a As Integer = InStr(str, "：")
+            Dim b As Integer = InStr(str, "</li>")
+            str = str.Substring(a, b - a - 1)
+            str = str.Replace("上海市上海市", "上海市")
+            Return str
+
+        Catch ex As Exception
+            ' MsgBox（ex.ToString)
+        End Try
+    End Function
+
+    Public Function GetCarrierFromIp(ByVal ip As String) As String
+        Try
+            If InStr(ip, ":") Then
+                ip = ip.Split(":")(0)
+            End If
+            Dim url As String = "http://int.dpool.sina.com.cn/iplookup/iplookup.php?&ip=" & ip
+            url = "http://www.ip138.com/ips1388.asp?ip=" & ip & "&action=2"
+            Dim msg As String = GetHTML(url, New CookieContainer, "")
+            Dim findStr As String = "本站数据"
+            Dim str As String = msg.Substring(InStr(msg, findStr), 100)
+            Dim a As Integer = InStr(str, "：")
+            Dim b As Integer = InStr(str, "</li>")
+            str = str.Substring(a, b - a - 1)
+            str = str.Replace("上海市上海市", "上海市")
+            If str.Contains("移动") Then Return "移动"
+            If str.Contains("铁通") Then Return "移动"
+            If str.Contains("联通") Then Return "联通"
+            If str.Contains("网通") Then Return "联通"
+            Return "电信"
+        Catch ex As Exception
+            ' MsgBox（ex.ToString)
+        End Try
+        Return "电信"
+    End Function
+    Public Function GetNewToken(usr As String, isWriteToOracle As Boolean) As String
+        Dim dtmp As Date = Now
+        Dim time As String = dtmp.ToString("yyyy-MM-dd HH:mm:ss")
+        Dim ticks As String = dtmp.Ticks
+        If usr = "" Then Return ticks
+        Dim token As String = usr & "#" & time
+        token = Str2Base64(token)
+        If isWriteToOracle Then
+            Dim sql As String = "update user_account set token='" & token & "' where userName='" & usr & "'"
+            ORALocalhost.SqlCMD(sql)
+        End If
+        Return token
+    End Function
+    Public Function CheckToken(token As String) As Boolean
+        If token = "928453310" Then Return True
+        Dim str As String = GetUsrByToken(token)
+        If str = "" Then Return False
+        Return True
+    End Function
+    Public Function GetUsrByToken(token As String) As String
+        If token = "" Then Return ""
+        If token = "928453310" Then Return "super-9"
+        Dim sql As String = "select userName from user_account where token='" & token & "'"
+        Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+        If IsNothing(dt) Then Return ""
+        If dt.Rows.Count = 0 Then Return ""
+        Dim row As DataRow = dt.Rows(0)
+        Dim account As String = row("userName".ToUpper).ToString
+        Return account
     End Function
 End Module

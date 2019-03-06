@@ -1,0 +1,567 @@
+<html>
+
+<head>
+    <script src="js/jquery-3.2.1.js"></script>
+    <title>Ajax测试</title>
+</head>
+
+<body>
+    <div id='main'></div>
+    <script>
+        //var u = "http://localhost:26489/default.ashx/"
+        // var u = "http://111.53.74.132:7062/default.ashx/"
+        var u = "http://111.53.74.132:7062/default.ashx/"
+        window.onload = init;
+        function init() {
+            //   GetSmartPlanProAndCity();
+            //   GetSmartPlanRSRPPoint();
+            //  GetMRProAndCity();
+            //test8091();
+            // GetQoeVideoPoint();
+            // GetSdkRSRPPoint();
+            // GetMRGridlist();
+            //   GetENodeBIdYMData();
+            // GetQoeHttpPoint();
+            // GetUeQoeReportRSRPPoint();
+            //GetLteCellInfo();
+            //GetTtLteCellInfo();
+            // UploadTtLTECellInfo();
+            // UploadLteCellInfo();
+            //UploadDtGroup();
+            //GetDtGroup();
+            //	GetWorkLog();
+            //UploadWorkLog();
+            //	GetUpdateWorkLog();
+          //  RunSql();
+           // AddClientLog();
+            DeleteDtGroup();
+        }
+        //删除测试用户组
+        function DeleteDtGroup() {
+            log("DeleteDtGroup...");
+            var d = {
+                func: "DeleteDtGroup",
+                token:"UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
+                groupId:"777"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        //上传访客记录
+        function AddClientLog() {  
+            log("AddClientLog...");
+            var d = {
+                func: "AddClientLog",
+                token: "UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
+                data: {
+                    title: "标题测试",    //标题
+                    serverModuleName: "QOER查询页面",   //查阅的板块
+                    body: "内容测试",                //日志内容，string类型，若存json，需转string后存     
+                    clientIP: "156.123.145.8",      //访客IP
+                    clientUserName:"admin"          //访客用户名   后台会取token所对应的用户名，此处尽量也带上
+                }
+            };
+            var str = JSON.stringify(d);
+            $.post(u, str, function (data) {
+              
+                log(data);
+            }, "text");
+        }
+
+        //'QOE_VIDEO_SOURCE
+
+        function RunSql() {		//上传工作日志
+            log("runSQL...");
+            var u = "http://111.53.74.132:7062/default.ashx/"
+            // var u = "http://localhost:26849/default.ashx/"
+
+            var d = {
+                func: "RunSQL",
+                token:"UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
+                data: "select * from QOE_VIDEO_TABLE  where datetime>'2019-02-21 0:00:00' and datetime<'2019-02-22 0:00:00' "
+            };
+
+            log("------>Runsql post..." & u);
+            $.post(u, JSON.stringify(d), function (data) {
+                console.log(data);
+                log(data);
+            }, "text");
+           // log("---->RunSql End...");
+        }
+
+
+
+        function GetWorkLog() {  //获取日志
+            log("获取GetWorkLog...");
+            var u = "http://111.53.74.132:8091/default.ashx/"
+            var d = {
+                func: "GetWorkLog",
+                name: "联通",
+                day: "2019-01-12",
+                corp: "123"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+
+
+        function GetUpdateWorkLog() {  //更新工作日志
+            log("获取 GetUpdateWorkLog...");
+            var u = "http://111.53.74.132:8091/default.ashx/"
+            var d = {
+                func: "GetUpdateWorkLog",
+                day: "2019-01-12",
+                name: "联通",
+                project: "uplan",
+                city: "茂名市2",
+                workContent: "@@@@@@@",
+                issue: "--",
+                modifiedBy: "PPPP",
+                modifiedDate: "0001111",
+                corp: "2200"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+
+
+        function UploadWorkLog() {		//上传工作日志
+            log("UploadWorkLog...");
+            var u = "http://111.53.74.132:8091/default.ashx/"
+            // var u = "http://localhost:26849/default.ashx/"
+            var workLog = {
+
+                day: "2019-01-12",
+                name: "移动",
+                project: "uu",
+                city: "茂名市",
+
+                workContent: "2wwwdddwww",
+                issue: "22",
+                modifiedBy: "22243443",
+                modifiedDate: "1111",
+                corp: "22"
+
+            };
+            var workLogList = new Array();
+            workLogList.push(workLog);
+
+            var dataStr = JSON.stringify(workLogList);
+            var d = {
+                func: "UploadWorkLog",
+                data: workLogList
+            };
+
+            log("------>UploadWorkLog post..." & u);
+            $.post(u, JSON.stringify(d), function (data) {
+                console.log(data);
+                log(data);
+            }, "text");
+            log("---->UploadWorkLog End...");
+        }
+
+        function test8091() {  //GetSmartPlanRSRPPoint获取某片区RSRP数据点
+            log("test.21..");
+            var u = "http://localhost:26849/default.ashx/"
+            var d = {
+                func: "Test",
+                name: "移动",
+                day: "2019-01-12",
+                corp: "123"
+
+
+            }
+            $.get(u, d, function (data) {
+                log("test:" + data);
+            }, "text");
+        }
+
+
+        function GetDtGroup() {  //获取
+            log("获取GetDtGroup...");
+            var u = "http://111.53.74.132:7062/default.ashx/"
+            var d = {
+                func: "GetDtGroup",
+                carrier: "",
+                city: "天津市",
+                groupID: "123"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        function UploadDtGroup() {
+            log("UploadDtGroup...");
+            var u = "http://111.53.74.132:7062/default.ashx/"
+            var cellInfo = {
+                carrier: "移动",
+                province: "广东省",
+                city: "茂名市",
+
+                groupId: "123",
+                line: "2",
+                name_cm: "222",
+                imei_cm: "22243443",
+                phone_cm: "1111",
+                name_cu: "222",
+                imei_cu: "4433322",
+                phone_cu: "3334443",
+                name_ct: "2222333",
+                imei_ct: "644333222",
+                phone_ct: "222222",
+                modified_datetime: "",
+                modified_by: "111222",
+                demo: ""
+            };
+            var cellInfoList = new Array();
+            cellInfoList.push(cellInfo);
+
+            var dataStr = JSON.stringify(cellInfoList);
+            var d = {
+                func: "UploadDtGroup",
+                data: cellInfoList
+            };
+
+            log("------>UploadTtLTECellInfo post...");
+            $.post(u, JSON.stringify(d), function (data) {
+                console.log(data);
+                log(data);
+            }, "text");
+            log("---->UploadTtLTECellInfo End...");
+        }
+
+        function UploadTtLTECellInfo() {
+            log("UploadTtLTECellInfo...");
+            var u = "http://111.53.74.132:7062/default.ashx/"
+            var cellInfo = {
+                carrier: "移动",
+                province: "广东省",
+                city: "茂名市",
+                district: "茂南区",
+                enodebName: "abcderf",
+                enodebName_Tt: "ddc_1",
+
+                state: "1",
+                lon: 113.1,
+                lat: 23.2,
+                SiteType: "宏站",
+                h: "",
+                address: "",
+
+                demo: "22"
+            };
+            var cellInfoList = new Array();
+            cellInfoList.push(cellInfo);
+            cellInfo = {
+                carrier: "移动",
+                province: "广东省",
+                city: "茂名市",
+                district: "茂南区",
+                enodebName: "aa",
+                enodebName_Tt: "aac_1",
+
+                state: "1",
+
+                lon: 113.12,
+                lat: 23.3,
+                SiteType: "宏站",
+                h: "23",
+                address: "45",
+
+                demo: "87"
+            };
+            cellInfoList.push(cellInfo);
+            var dataStr = JSON.stringify(cellInfoList);
+            var d = {
+                func: "UploadTtLTECellInfo",
+                data: cellInfoList
+            };
+
+            log("------>UploadTtLTECellInfo post...");
+            $.post(u, JSON.stringify(d), function (data) {
+                console.log(data);
+                log(data);
+            }, "text");
+            log("---->UploadTtLTECellInfo End...");
+        }
+        function GetTtLteCellInfo() {  //获取铁塔工参
+            log("获取铁塔基站表...");
+            var d = {
+                func: "GetTtLteCellInfo",
+                carrier: "移动",
+                province: "",
+                city: "茂名市",
+                district: ""
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+
+        function GetLteCellInfo() {  //获取LTE工参
+            log("获取GetLteCellInfo小区...");
+            var d = {
+                func: "GetLteCellInfo",
+                carrier: "移动",
+                city: "天津市",
+
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+
+        function test() {  //GetSmartPlanRSRPPoint获取某片区RSRP数据点
+            log("test.21..");
+            var d = {
+                func: "test21",
+                carrier: "移动",
+
+
+            }
+            $.get(u, d, function (data) {
+                log("test:" + data);
+            }, "text");
+        }
+
+        function UploadLteCellInfo() {
+            log("UploadLteCellInfo...");
+            var u = "http://111.53.74.132:7062/default.ashx/"
+            var cellInfo = {
+                carrier: "移动",
+                city: "茂名市",
+                district: "茂南区",
+                enodebName: "ccd",
+                ecellName: "ddc_1",
+                eNodeBId: "2233",
+                cellId: "1",
+                localCellid: "2",
+                lon: 113.1,
+                lat: 23.2,
+                SiteType: "宏站",
+                h: "23",
+                amzimuth: "21",
+                title: "2",
+                tac: "223",
+                freq: "4454",
+                PCI: "9",
+                demo: "22"
+            };
+            var cellInfoList = new Array();
+            cellInfoList.push(cellInfo);
+            cellInfo = {
+                carrier: "移动",
+                city: "茂名市",
+                district: "茂南区",
+                enodebName: "aa",
+                ecellName: "aac_1",
+                eNodeBId: "2232",
+                cellId: "1",
+                localCellid: "22",
+                lon: 113.12,
+                lat: 23.3,
+                SiteType: "宏站",
+                h: "23",
+                amzimuth: "45",
+                title: "2",
+                tac: "226",
+                freq: "454",
+                PCI: "78",
+                demo: "87"
+            };
+            cellInfoList.push(cellInfo);
+            var dataStr = JSON.stringify(cellInfoList);
+            var d = {
+                func: "UploadLteCellInfo",
+                data: cellInfoList
+            };
+
+            log("UploadLTECellInfo post...");
+            $.post(u, JSON.stringify(d), function (data) {
+                console.log(data);
+                log(data);
+            }, "text");
+            log("UploadLTECellInfo End...");
+        }
+
+        function UploadLTECellInfo0() {  //UploadLTECellInfo上传工参
+            log("UploadLTECellInfo0...");
+            var d = {
+                func: "UploadLTECellInfo0",
+                carrier: "移动",
+                city: "茂名市",
+                district: "茂南区",
+                enodebName: "ccd",
+                ecellName: "ddc_1",
+                eNodeBId: "2233",
+                cellId: "1",
+                localCellid: "2",
+                lon: 113,
+                lat: 23,
+                siteType: "宏站",
+                h: 23,
+                amzimuth: 21,
+                title: 2,
+                Tac: 223,
+                freq: 4454,
+                pci: 9,
+                demo: ""
+
+            }
+            //$.get(function(data),d){                log("UploadLTECellInfo0:"+ data);            },"text");
+        }
+
+        function GetUeQoeReportRSRPPoint() {  
+            log("获取GetUeQoeReportRSRPPoint数据点...");
+            var d = {
+                func: "GetUeQoeReportRSRPPoint",
+                carrier: "中国移动",
+                imei: "868375023586891",
+                netType: "",
+                grid: "",
+                startTime: "2019-01-02",  
+                endTime: "2019-01-03",
+                readIndex: 0, 
+                readCount: 100  
+            }
+            $.get(u, d, function (data) {
+                log("GetUeQoeReportRSRPPoint:" + data);
+            }, "text");
+        }
+        function GetQoeHttpPoint() {  //GetQoePPoint获取某片区RSRP数据点
+            log("获取GetHttpPoint数据点...");
+            var d = {
+                func: "GetQoeHttpPoint",
+                carrier: "中国联通",
+                province: "广东省",
+                city: "茂名市",
+                district: "",
+                netType: "",
+                startTime: "",  //起始时间，若为空，则后台不会监测endTime，也不会对时间进行筛选
+                endTime: "", //配合startTime使用，若startTime不为空，则endTime不可为空
+                readIndex: -1, //起始index  =-1 为取所有行，则后台会忽略 readCount
+                readCount: 100  //要取的行数
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+
+        function GetQoeVideoPoint() {  //GetQoePPoint获取某片区RSRP数据点
+            log("获取GetQoeVideoPoint数据点...");
+            var d = {
+                func: "GetQoeVideoPoint",
+                token:"928453310",
+                carrier: "中国电信",
+                province: "",
+                city: "",
+                district: "",
+                netType: "",
+                startTime: "2019-02-24 19:00:00",  //起始时间，若为空，则后台不会监测endTime，也不会对时间进行筛选
+                endTime: "2019-02-25 19:00:00", //配合startTime使用，若startTime不为空，则endTime不可为空
+                readIndex: 0, //起始index  =-1 为取所有行，则后台会忽略 readCount
+                readCount: 100  //要取的行数
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+
+        function log(html) {
+            console.log(html);
+            $("#main").html(html);
+        }
+        function GetENodeBIdYMData() {  //获取某eNodeBId性能指标
+            var d = {
+                func: "GetENodeBIdYMData",
+                eNodeBId: "",  //必带，不可为空
+                cellId: "",  //必带，可为空
+                time: "2018-11-28 21:45:00", //必带，可为空  为空则服务器会默认提取最近时间，如果 getCount同时=0,则服务器会默认提取最近20条该 eNodeBId 记录
+                getCount: 1  //必带，可为 0  为 0 表示有多少数据取多少(配合time为空除外)
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        function GetSmartPlanProAndCity() {  //获取数据库已存在的 省--市 列表
+            var d = {
+                func: "GetSmartPlanProAndCity"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        function GetSdkRSRPPoint() {  //GetSmartPlanRSRPPoint获取某片区RSRP数据点
+            log("获取GetSdkRSRPPoint数据点...");
+            var d = {
+                func: "GetSdkRSRPPoint",
+                carrier: "中国移动",
+                province: "广东省",
+                city: "茂名市",
+                grid: "36722",
+                district: "",
+                netType: "",
+                startTime: "2018-12-16T07:34:48.868Z",  //起始时间，若为空，则后台不会监测endTime，也不会对时间进行筛选
+                endTime: "2018-12-23T07:34:48.868Z", //配合startTime使用，若startTime不为空，则endTime不可为空
+                readIndex: 0, //起始index  =-1 为取所有行，则后台会忽略 readCount
+                readCount: 100  //要取的行数
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        function GetMRGridlist() { //获取MR数据库网格ID列表
+            var d = {
+                func: "GetMRGridlist"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        function GetMRPoint() {  //获取MR数据点
+            log("获取MR数据点...");
+            var d = {
+                func: "GetMRPoint",
+                province: "广东省",
+                city: "茂名市",
+                district: "",
+                grid: "",     //网格
+                eNodeBId: "",
+                cellId: "",
+                ECI: "",
+                siteType: -1,   //基站类型， 0 表示 室分，1表示 宏站   -1 表示不筛选
+                startTime: "",  //起始时间，若为空，则后台不会监测endTime，也不会对时间进行筛选
+                endTime: "", //配合startTime使用，若startTime不为空，则endTime不可为空
+                readIndex: 0,  //起始index  =-1 为取所有行，则后台会忽略 readCount
+                readCount: 1000//要取的行数
+            }
+            $.get(u, d, function (data) {
+                var str = data.result;
+                str = str + "<br><br>" + data.msg;
+                str = str + "<br><br>" + "数据点:" + data.data.length;
+                str = str + "<br><br>" + data.errmsg;
+                if (data.data != null) {
+                    if (data.data.length > 0) {
+                        str = str + "<br><br>" + JSON.stringify(data.data[0]);
+                    }
+                }
+                log(str);
+            }, "json");
+        }
+
+        function GetMRProAndCity() {  //获取MR数据库已存在的 省--市 列表
+            var d = {
+                func: "GetMRProAndCity"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+
+    </script>
+</body>
+
+</html>

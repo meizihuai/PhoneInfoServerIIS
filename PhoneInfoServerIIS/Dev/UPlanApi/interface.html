@@ -1,0 +1,50 @@
+<html>
+
+<head>
+    <script src="js/jquery-3.2.1.js"></script>
+    <title>Ajax测试</title>
+</head>
+
+<body>
+    <div id='main'></div>
+    <script>
+        //var u = "http://localhost:26489/default.ashx/"
+       // var u = "http://111.53.74.132:7062/default.ashx/"
+        var u = "http://111.53.74.132:8091/default.ashx/"
+        window.onload = init;
+        function init() {
+     
+	 				RunSql();
+        }  
+        
+        
+        //'QOE_VIDEO_SOURCE
+        
+       function RunSql(){		
+        		log("runSQL...");
+          var u = "http://111.53.74.132:7062/default.ashx/"
+           // var u = "http://localhost:26849/default.ashx/"
+         
+           var d={
+           			func:"RunSQL",
+           			data:"select * from QOE_VIDEO_TABLE  where datetime>'2019-02-21 0:00:00' and datetime<'2019-02-22 0:00:00' "
+           		};
+           		
+		   	log("------>Runsql post..."& u);
+           $.post(u,JSON.stringify(d),function(data){
+           	console.log(data);
+               log(data);
+           },"text");
+           	log("---->RunSql End...");
+        }
+    
+ 
+    function log(html) {
+            console.log(html);
+            $("#main").html(html);
+        }  
+        
+    </script>
+</body>
+
+</html>

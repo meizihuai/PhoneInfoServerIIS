@@ -11,6 +11,7 @@ Module Mod_Response
     Structure PostStu
         Dim func As String
         Dim data As Object
+        Dim token As String
     End Structure
 
     Public Sub myResponse(ByVal context As HttpContext, ByVal np As NormalResponse)

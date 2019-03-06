@@ -1,5 +1,6 @@
 ﻿
 Public Class PhoneInfo
+    Public RID As String
     Public DATETIME As String
     Public businessType As String
     Public apkName As String

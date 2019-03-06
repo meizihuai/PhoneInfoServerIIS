@@ -20,6 +20,7 @@ Imports System.Web
 Imports MySql.Data.MySqlClient
 Imports System.Reflection
 Imports System.IO.Compression
+Imports System.Threading.Tasks
 ''' <summary>
 '''本类用于处理HTTP Get和Post请求，主要API都在此，通过反射来获取API处理程序
 ''' </summary>
@@ -249,11 +250,9 @@ Public Class HTTPHandle
         End Try
     End Function
     '上传新的测试组信息
-    Public Function Handle_UploadDtGroup(context As HttpContext, data As Object) As NormalResponse '保存DTGroup
-        Dim Stepp As Integer = -1
+    Public Function Handle_UploadDtGroup(context As HttpContext, data As Object, token As String) As NormalResponse '保存DTGroup
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
-            Stepp = 0
             Try
                 Dim DtList As List(Of DtInfo) = JsonConvert.DeserializeObject(str, GetType(List(Of DtInfo)))
                 If IsNothing(DtList) Then
@@ -262,7 +261,6 @@ Public Class HTTPHandle
                 If DtList.Count = 0 Then
                     Return New NormalResponse(False, "DtList count =0")
                 End If
-                Stepp = 1
                 Dim colList() As String = GetOraTableColumns("Dt_Group")
                 Dim dt As New DataTable
                 For Each col In colList
@@ -270,8 +268,10 @@ Public Class HTTPHandle
                         dt.Columns.Add(col)
                     End If
                 Next
-                Stepp = 2
                 For Each itm In DtList
+                    If ORALocalhost.SqlIsIn("select * from dt_group where groupid='" & itm.groupId & "'") Then
+                        Return New NormalResponse(False, "groupId '" & itm.groupId & "'已存在")
+                    End If
                     Dim row As DataRow = dt.NewRow
                     row("province".ToUpper) = itm.province
                     row("city".ToUpper) = itm.city
@@ -289,37 +289,37 @@ Public Class HTTPHandle
                     row("modified_datetime".ToUpper) = itm.modified_datetime
                     row("modified_by".ToUpper) = itm.modified_by
                     row("demo".ToUpper) = itm.demo
-
                     dt.Rows.Add(row)
                 Next
-                Stepp = 20
                 Dim result As String = ORALocalhost.SqlCMDListQuickByPara("Dt_Group", dt)
                 If result = "success" Then 'true
-                    Dim np As New NormalResponse(True, "Dt_Group success,Row=" & dt.Rows.Count, "", "")
+                    Dim np As New NormalResponse(True, result)
                     Return np
-
                 Else
-                    Dim np As New NormalResponse(False, result & " step=" & Stepp, "", "")
+                    Dim np As New NormalResponse(False, result)
                     Return np
-
                 End If
             Catch ex As Exception
-                Return New NormalResponse(False, "Dt_Group json格式非法,Step=" & Stepp & " err=" & ex.ToString)
+                Return New NormalResponse(False, ex.ToString)
             End Try
         Catch ex As Exception
-            Return New NormalResponse(False, "Upload Dt_Group Err Step=" & Stepp & " " & ex.ToString)
+            Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
 
     '删除测试组
     Public Function Handle_DeleteDtGroup(ByVal context As HttpContext) As NormalResponse '删除测试组
         Try
-            Dim groupID As String = context.Request.QueryString("groupID")
-
-            Dim sql As String = "delete from Dt_Group where groupID='" & groupID & "'"
+            Dim groupId As String = context.Request.QueryString("groupId")
+            If IsNothing(groupId) Then Return New NormalResponse(False, "groupId不可为空")
+            If groupId = "" Then Return New NormalResponse(False, "groupId不可为空")
+            If ORALocalhost.SqlIsIn("select * from Dt_Group where groupId='" & groupId & "'") = False Then
+                Return New NormalResponse(False, "该groupId不存在")
+            End If
+            Dim sql As String = "delete from Dt_Group where groupId='" & groupId & "'"
             Dim result As String = ORALocalhost.SqlCMD(sql)
             If result = "success" Then
-                Return New NormalResponse(True, "删除 " & groupID & " 成功！")
+                Return New NormalResponse(True, "删除成功！")
             Else
                 Return New NormalResponse(False, result)
             End If
@@ -356,6 +356,9 @@ Public Class HTTPHandle
             If groupId = "" Then Return New NormalResponse(False, "必须输入groupId")
             'If day = "" Then Return New NormalResponse(False, "必须输入日期")
             'If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
+            If ORALocalhost.SqlIsIn("select * from Dt_Group where groupId='" & groupId & "'") = False Then
+                Return New NormalResponse(False, "该groupId不存在")
+            End If
 
             Dim Cond As String = "", sql As String
 
@@ -403,7 +406,7 @@ Public Class HTTPHandle
         End Try
     End Function
     '上传铁塔工参
-    Public Function Handle_UploadTtLteCellInfo(context As HttpContext, data As Object) As NormalResponse '保存铁塔Lte工参
+    Public Function Handle_UploadTtLteCellInfo(context As HttpContext, data As Object, token As String) As NormalResponse '保存铁塔Lte工参
         Dim Stepp As Integer = -1
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -469,7 +472,7 @@ Public Class HTTPHandle
         End Try
     End Function
     '上传LTE工参
-    Public Function Handle_UploadLteCellInfo(context As HttpContext, data As Object) As NormalResponse '保存运营商Lte工参
+    Public Function Handle_UploadLteCellInfo(context As HttpContext, data As Object, token As String) As NormalResponse '保存运营商Lte工参
         Dim Stepp As Integer = -1
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -544,7 +547,7 @@ Public Class HTTPHandle
         Public type As String
     End Structure
     '上传离线数据
-    Public Function Handle_UploadofflineDatas(context As HttpContext, data As Object) As NormalResponse  ''处理离线上传包
+    Public Function Handle_UploadofflineDatas(context As HttpContext, data As Object, token As String) As NormalResponse  ''处理离线上传包
         Try
             ' Dim str As String = JsonConvert.SerializeObject(data)
             Dim list As List(Of LocalTestInfo) = JsonConvert.DeserializeObject(data, GetType(List(Of LocalTestInfo)））
@@ -570,21 +573,21 @@ Public Class HTTPHandle
                         If IsNothing(pi) Then Return New NormalResponse(False, "PhoneInfo格式非法")
                         pi.ISUPLOADDATATIMELY = -1
                         pi.DATETIME = time
-                        np = Handle_UploadPhoneInfo(context, pi)
+                        np = Handle_UploadPhoneInfo(context, pi, token)
                     End If
                     If func = "UploadQoEVideoInfo" Then 'Video
                         Dim qoe As QoEVideoInfo = JsonConvert.DeserializeObject(jdata, GetType(QoEVideoInfo))
                         If IsNothing(qoe) Then Return New NormalResponse(False, "QoEVideoInfo格式非法")
                         qoe.ISUPLOADDATATIMELY = -1
                         qoe.DATETIME = time
-                        np = Handle_UploadQoEVideoInfo(context, qoe)
+                        np = Handle_UploadQoEVideoInfo(context, qoe, token)
                     End If
                     If func = "UploadQoEHTTPInfo" Then 'HTTP
                         Dim qoe As QoEHTTPInfo = JsonConvert.DeserializeObject(jdata, GetType(QoEHTTPInfo))
                         If IsNothing(qoe) Then Return New NormalResponse(False, "QoEHTTPInfo格式非法")
                         qoe.ISUPLOADDATATIMELY = -1
                         qoe.DATETIME = time
-                        np = Handle_UploadQoEHTTPInfo(context, qoe)
+                        np = Handle_UploadQoEHTTPInfo(context, qoe, token)
                     End If
                     If np.result Then
                         successCount = successCount + 1
@@ -612,7 +615,7 @@ Public Class HTTPHandle
         End Try
     End Function
     'Android app上传QOER数据 
-    Public Function Handle_UploadPhoneInfo(context As HttpContext, data As Object) As NormalResponse
+    Public Function Handle_UploadPhoneInfo(context As HttpContext, data As Object, token As String) As NormalResponse
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
             Dim pi As PhoneInfo = JsonConvert.DeserializeObject(str, GetType(PhoneInfo))
@@ -651,14 +654,22 @@ Public Class HTTPHandle
         Catch ex As Exception
 
         End Try
+        row("RID") = pi.RID
         row("DateTime".ToUpper) = pi.DATETIME
         row("Day".ToUpper) = dateTime.ToString("yyyy-MM-dd")
         row("ISUPLOADDATATIMELY") = pi.ISUPLOADDATATIMELY
-        If pi.businessType = "" Then
+        If IsNothing(pi.businessType) Then
             pi.businessType = ""
+        End If
+        If pi.businessType = "" Then
+            pi.businessType = "Report"
         End If
         If pi.apkName = "" Then
             pi.apkName = "UniQoE"
+        End If
+        If pi.ADJ_SIGNAL.Length > 4000 Then
+            ' qoe.ADJ_SIGNAL = qoe.ADJ_SIGNAL.Substring(0, 4000)
+            pi.ADJ_SIGNAL = ""
         End If
         row("MNC".ToUpper) = pi.MNC
         row("wifi_SSID".ToUpper) = pi.wifi_SSID
@@ -692,6 +703,7 @@ Public Class HTTPHandle
         row("sigNalInfo".ToUpper) = pi.sigNalInfo
         row("lon".ToUpper) = pi.lon
         row("lat".ToUpper) = pi.lat
+
         If pi.lon > 0 And pi.lat > 0 Then
             Dim c As CoordInfo = GPS2BDS(pi.lon, pi.lat)
             row("BDLON".ToUpper) = c.x
@@ -742,6 +754,8 @@ Public Class HTTPHandle
         row("PHONE_SCREEN_BRIGHTNESS".ToUpper) = pi.PHONE_SCREEN_BRIGHTNESS
         row("EARFCN".ToUpper) = pi.EARFCN
         row("PHONE_ELECTRIC".ToUpper) = pi.PHONE_ELECTRIC
+
+
         If IsNothing(pi.neighbourList) = False Then
             Dim nb As List(Of Neighbour) = pi.neighbourList
             If nb.Count > 0 Then
@@ -771,7 +785,7 @@ Public Class HTTPHandle
         End If
     End Function
     'Android app上传QOE_VIDEO数据 
-    Public Function Handle_UploadQoEVideoInfo(context As HttpContext, data As Object) As NormalResponse 'Android 上传QoEVideo
+    Public Function Handle_UploadQoEVideoInfo(context As HttpContext, data As Object, token As String) As NormalResponse 'Android 上传QoEVideo
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
             Dim qoe As QoEVideoInfo = JsonConvert.DeserializeObject(str, GetType(QoEVideoInfo))
@@ -804,13 +818,13 @@ Public Class HTTPHandle
         row("cpu".ToUpper) = qoe.cpu
         row("ADJ_SIGNAL".ToUpper) = qoe.ADJ_SIGNAL
         row("isScreenOn".ToUpper) = qoe.isScreenOn
-
-
+        row("SCREENRECORD_FILENAME".ToUpper) = qoe.SCREENRECORD_FILENAME
+        row("isscreenrecorduploaded".ToUpper) = 0
 
         row("ISUPLOADDATATIMELY") = qoe.ISUPLOADDATATIMELY
         row("DATETIME".ToUpper) = qoe.DATETIME
         row("NET_TYPE".ToUpper) = qoe.NET_TYPE
-        row("BUSINESS_TYPE".ToUpper) = qoe.BUSINESSTYPE
+        row("BUSINESS_TYPE".ToUpper) = qoe.BUSINESS_TYPE
         row("VIDEO_BUFFER_INIT_TIME".ToUpper) = qoe.VIDEO_BUFFER_INIT_TIME
         row("VIDEO_BUFFER_TOTAL_TIME".ToUpper) = qoe.VIDEO_BUFFER_TOTAL_TIME
         row("VIDEO_STALL_NUM".ToUpper) = qoe.VIDEO_STALL_NUM
@@ -923,6 +937,8 @@ Public Class HTTPHandle
                 row(("LONGITUDE_" & i + 1).ToUpper) = recordValue.LONGITUDE
                 row(("LATITUDE_" & i + 1).ToUpper) = recordValue.LATITUDE
             Next
+            row(("LONGITUDE_1").ToUpper) = qoe.pi.lon
+            row(("LATITUDE_1").ToUpper) = qoe.pi.lat
         End If
         If IsNothing(qoe.SIGNALList) = False Then
             Dim recordValue As String = ""
@@ -1023,6 +1039,7 @@ Public Class HTTPHandle
 
         If IsNothing(qoe.BUSINESSTYPE) Then qoe.BUSINESSTYPE = ""
         If qoe.BUSINESSTYPE = "" Then qoe.BUSINESSTYPE = "QoEVideo"
+        qoe.BUSINESS_TYPE = qoe.BUSINESSTYPE
         Dim npi As PhoneInfo = qoe.pi
         If IsNothing(npi) = False Then
             Dim lon As Double = qoe.pi.lon
@@ -1063,6 +1080,10 @@ Public Class HTTPHandle
             qoe.FREQ = npi.FREQ
             qoe.cpu = npi.cpu
             qoe.ADJ_SIGNAL = npi.ADJ_SIGNAL
+            If qoe.ADJ_SIGNAL.Length > 4000 Then
+                ' qoe.ADJ_SIGNAL = qoe.ADJ_SIGNAL.Substring(0, 4000)
+                qoe.ADJ_SIGNAL = ""
+            End If
             qoe.Adj_ECI1 = npi.Adj_ECI1
             qoe.Adj_RSRP1 = npi.Adj_RSRP1
             qoe.Adj_SINR1 = npi.Adj_SINR1
@@ -1089,22 +1110,30 @@ Public Class HTTPHandle
             qoe.ALTITUDE = npi.altitude
             qoe.GPSSPEED = npi.gpsSpeed
             qoe.SATELLITECOUNT = npi.satelliteCount
+
+
+            qoe.ECI = npi.CI
+            qoe.MCC = "460"
+            qoe.PLMN = qoe.MCC & qoe.MNC
         End If
         If qoe.SATELLITECOUNT >= 4 Then
             qoe.ISOUTSIDE = 1
         Else
             qoe.ISOUTSIDE = 0
         End If
-        Dim Video_LOAD_Score As Single = GetVideo_LOAD_Score(qoe.VIDEO_BUFFER_INIT_TIME, qoe.VIDEO_TOTAL_TIME)
+        If qoe.VIDEO_TOTAL_TIME > 0 Then qoe.VIDEO_STALL_DURATION_PROPORTION = 100 * qoe.VIDEO_STALL_TOTAL_TIME / qoe.VIDEO_TOTAL_TIME
+        If qoe.VIDEO_TOTAL_TIME > 0 Then qoe.BVRATE = 100 * qoe.VIDEO_BUFFER_TOTAL_TIME / qoe.VIDEO_TOTAL_TIME
+        Dim Video_LOAD_Score As Single = GetVideo_LOAD_Score(qoe.VIDEO_BUFFER_INIT_TIME, qoe.VIDEO_BUFFER_TOTAL_TIME, qoe.VIDEO_TOTAL_TIME)
         Dim Video_STALL_Score As Single = GetVideo_STALL_Score(qoe.VIDEO_STALL_TOTAL_TIME, qoe.VIDEO_STALL_NUM, qoe.VIDEO_TOTAL_TIME)
+        qoe.VIDEO_BUFFER_TOTAL_SCORE = GetVideo_Buffer_Total_Score(qoe.BVRATE)
         qoe.VIDEO_LOAD_SCORE = Video_LOAD_Score
         qoe.VIDEO_STALL_SCORE = Video_STALL_Score
-        qoe.VMOS = GetVMOS(Video_LOAD_Score, Video_STALL_Score)
 
+        qoe.VMOS = GetVMOS(Video_LOAD_Score, Video_STALL_Score)
         Return qoe
     End Function
     'Android app上传QOE_HTTP数据 
-    Public Function Handle_UploadQoEHTTPInfo(ByVal context As HttpContext, ByVal data As Object) As NormalResponse ''上传QOE HTTP Table
+    Public Function Handle_UploadQoEHTTPInfo(ByVal context As HttpContext, ByVal data As Object, token As String) As NormalResponse ''上传QOE HTTP Table
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
             Dim qoe As QoEHTTPInfo = JsonConvert.DeserializeObject(str, GetType(QoEHTTPInfo))
@@ -1157,6 +1186,10 @@ Public Class HTTPHandle
         If IsNothing(qoe.HTTPTESTRESULTLIST) = False Then row("HTTPTESTRESULT") = JsonConvert.SerializeObject(qoe.HTTPTESTRESULTLIST)
         Dim pi As PhoneInfo = qoe.pi
         If IsNothing(pi) = False Then
+            If pi.ADJ_SIGNAL.Length > 4000 Then
+                ' qoe.ADJ_SIGNAL = qoe.ADJ_SIGNAL.Substring(0, 4000)
+                pi.ADJ_SIGNAL = ""
+            End If
             row("MNC".ToUpper) = pi.MNC
             row("wifi_SSID".ToUpper) = pi.wifi_SSID
             row("wifi_MAC".ToUpper) = pi.wifi_MAC
@@ -1273,56 +1306,50 @@ Public Class HTTPHandle
     End Sub
 
     '视频加载评分
-    Private Function GetVideo_LOAD_Score(loadTime As Long, totalTime As Long) As Single
-        Dim Score As Single = 1
-        If loadTime <= 100 Then Score = 5
-        If loadTime <= 1000 Then Score = 4
-        If loadTime <= 3000 Then Score = 3
-        If loadTime <= 5000 Then Score = 2
+    Private Function GetVideo_LOAD_Score(iniTime As Long, bufferTotalTime As Long, totalTime As Long) As Single
+        Dim iniScore As Single = 1
+        If iniTime <= 1000 Then iniScore = 5
+        If 1000 < iniTime And iniTime <= 2000 Then iniScore = 4
+        If iniTime < 2000 And iniTime <= 3000 Then iniScore = 3
+        If iniTime < 3000 And iniTime <= 5000 Then iniScore = 2
+        If iniTime > 5000 Then iniScore = 1
 
-        If totalTime <= 1000 Then Score = (5 + Score) / 2
-        If totalTime <= 3000 Then Score = (4 + Score) / 2
-        If totalTime <= 5000 Then Score = (3 + Score) / 2
-        If totalTime <= 6000 Then
-            Score = (2 + Score) / 2
-        Else
-            Score = (1 + Score) / 2
-        End If
-        Return Score
+        Dim bvRate As Double = 100 * bufferTotalTime / totalTime
+        Dim bvRateScore As Integer = GetVideo_Buffer_Total_Score(bvRate)
+        Dim score As Integer = bvRateScore * 0.5 + iniScore * 0.5
+        Return Math.Floor(score)
     End Function
     '视频卡顿评分
     Private Function GetVideo_STALL_Score(stallTime As Long, stallCount As Integer, totalTime As Long) As Integer
         Dim Score As Single = 1
         Dim p As Double = 100 * stallTime / totalTime
         If p = 0 Then Score = 5
-        If p < 0.1 Then Score = 4
-        If p < 1 Then Score = 3
-        If p < 5 Then Score = 2
+        If 0 < p And p <= 0.1 Then Score = 4
+        If 0.1 < p And p <= 1 Then Score = 3
+        If 1 < p And p <= 5 Then Score = 2
+        If 5 < p Then Score = 1
 
         If stallCount = 0 Then Score = (Score + 5) / 2
         If stallCount = 1 Then Score = (Score + 4) / 2
-
         If stallCount = 2 Then Score = (Score + 3) / 2
-
         If stallCount = 3 Then Score = (Score + 2) / 2
-
         If stallCount > 3 Then Score = (Score + 1) / 2
 
-        Return Score
+        Return Math.Floor(Score)
     End Function
     '缓存评分
-    Private Function GetVideo_Buffer_Total_Score(ByVal pinfo As VLCTestInfo) As Integer
-        If pinfo.BVRate < 10 Then Return 5
-        If pinfo.BVRate < 30 Then Return 4
-        If pinfo.BVRate < 50 Then Return 3
-        If pinfo.BVRate < 70 Then Return 2
+    Private Function GetVideo_Buffer_Total_Score(BVRate As Double) As Integer
+        If BVRate < 10 Then Return 5
+        If BVRate < 30 Then Return 4
+        If BVRate < 50 Then Return 3
+        If BVRate < 70 Then Return 2
         Return 1
     End Function
     'VMOS 总评分
     Private Function GetVMOS(ByVal Video_LOAD_Score As Integer, ByVal Video_STALL_Score As Integer) As Single
         Dim d As Double = 0.5 * Video_LOAD_Score + 0.5 * Video_STALL_Score
         'Dim i As Single = Math.Ceiling(d)
-        Return d
+        Return Math.Floor(d)
     End Function
     'HTTP响应时间的评分
     Private Function GetQoEHttpResponseScore(responseRime As Long) As Integer
@@ -1579,7 +1606,8 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "运营商错误")
                 ' Return New NormalResponse(False, "必须选择省份")carrier,
             End If
-            Dim sql As String = "select datetime,province,city,district,net_Type,GDlon,GDlat,SIGNAL_STRENGTH,SINR,eNodeBId,CellId,Grid,VMOS from Qoe_Video_TABLE "
+            Dim sql As String = "select datetime,province,city,district,net_Type,GDlon,GDlat,SIGNAL_STRENGTH,SINR,eNodeBId,CellId,Grid," &
+                                "VMOS,screenrecord_filename,isscreenrecorduploaded from Qoe_Video_TABLE "
             Dim doHaveWhere As Boolean = False
             If province <> "" Then
                 sql = sql & " where province='" & province & "'"
@@ -1686,11 +1714,27 @@ Public Class HTTPHandle
             dt.Columns(10).ColumnName = "CellId"
             dt.Columns(11).ColumnName = "Grid"
             dt.Columns(12).ColumnName = "QOE"
+
+            For Each row In dt.Rows
+                Dim screenrecord_filename As String = row("screenrecord_filename".ToUpper).ToString
+                Dim isscreenrecorduploaded As String = row("isscreenrecorduploaded".ToUpper).ToString
+                If IsNothing(screenrecord_filename) = False And IsNothing(isscreenrecorduploaded) = False Then
+                    If IsDBNull(screenrecord_filename) = False And IsDBNull(isscreenrecorduploaded) = False Then
+                        screenrecord_filename = myServerUrl & "/ScreenRecordFiles/" & screenrecord_filename
+                        If isscreenrecorduploaded = "1" Then
+                            row("screenrecord_filename".ToUpper) = screenrecord_filename
+                        Else
+                            row("screenrecord_filename".ToUpper) = ""
+                        End If
+                    End If
+                End If
+            Next
             'Stepp = 5
             Return New NormalResponse(True, "", "", dt)
         Catch ex As Exception
             Return New NormalResponse(False, "GetQoePointErr:" & ex.Message & ",Step=" & Stepp)
         End Try
+
     End Function
     '获取QoER的省市区结构
     Public Function Handle_GetQoeReportProAndCity(ByVal context As HttpContext) As NormalResponse '获取SDK中运营商的省、市、区信息
@@ -2401,9 +2445,10 @@ Public Class HTTPHandle
         Return stream.ToArray
     End Function
     '前端执行SQL语句，！！！仅用于调试开发阶段使用！！！
-    Public Function Handle_RunSQL(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '按Sql来查询
+    Public Function Handle_RunSQL(ByVal context As HttpContext, ByVal data As Object, token As String) As NormalResponse '按Sql来查询
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "sql is null")
+
             Dim str As String = data.ToString
             If str = "" Then Return New NormalResponse(False, "sql is null")
             str = str.TrimStart(" ")
@@ -2414,19 +2459,46 @@ Public Class HTTPHandle
             If order = "select" Then
                 isSelect = True
             End If
+            Dim errList As New List(Of String)
+            errList.Add("delete")
+            errList.Add("insert")
+            errList.Add("truncate")
+            errList.Add("drop")
+            errList.Add("alter")
+            errList.Add("create")
+            errList.Add("--")
+            errList.Add("#")
+            For Each itm In errList
+                If order.ToLower.Contains(itm) Then
+                    isSelect = False
+                    Exit For
+                End If
+            Next
             Dim sql As String = str
+            Dim logResult As String = RecordRunSqlLog(token, order, sql, isSelect)
             If isSelect Then
                 Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-                If IsNothing(dt) Then Return New NormalResponse(True, "", "", "[]")
-                If dt.Rows.Count = 0 Then Return New NormalResponse(True, "", "", "[]")
-                Return New NormalResponse(True, "", "", dt)
+                If IsNothing(dt) Then Return New NormalResponse(True, logResult, "", "[]")
+                If dt.Rows.Count = 0 Then Return New NormalResponse(True, logResult, "", "[]")
+                Return New NormalResponse(True, logResult, "", dt)
             Else
-                Dim result As String = ORALocalhost.SqlCMD(sql)
-                Return New NormalResponse(True, "", "", result)
+                Return New NormalResponse(False, "不允许执行该语句", logResult, "")
+                'Dim result As String = ORALocalhost.SqlCMD(sql)
+                'Return New NormalResponse(True, "", "", result)
             End If
         Catch ex As Exception
             Return New NormalResponse(False, ex.Message)
         End Try
+    End Function
+    Private Function RecordRunSqlLog(token As String, SQLfunc As String, SQLContent As String, runResult As Boolean) As String
+        Dim y As String = Chr(34)
+        SQLfunc = SQLfunc.Replace("'", y).Replace("--", "##")
+        SQLContent = SQLContent.Replace("'", y).Replace("--", "##")
+        Dim usr As String = GetUsrByToken(token)
+        Dim dateTime As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
+        Dim sql As String = "insert into sys_runSql_log (dateTime,userName,token,SqlFunc,SqlContent,runResult) values ('{0}','{1}','{2}','{3}','{4}',{5})"
+        sql = String.Format(sql, New String() {dateTime, usr, token, SQLfunc, SQLContent, IIf(runResult, 1, 0)})
+        Return ORALocalhost.SqlCMD(sql)
     End Function
     Structure GZfileInfo
         Dim cellInfo As cellInfo
@@ -2439,7 +2511,7 @@ Public Class HTTPHandle
         End Sub
     End Structure
     '上传MR原文件
-    Public Function Handle_UploadMRFile(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '上传MR文件
+    Public Function Handle_UploadMRFile(ByVal context As HttpContext, ByVal data As Object, token As String) As NormalResponse '上传MR文件
         Try
             Dim startTime As Date = Now
             Dim str As String = data.ToString
@@ -2576,7 +2648,7 @@ Public Class HTTPHandle
         Dim siteType As Integer
     End Structure
     '上传MR数据
-    Public Function Handle_UploadMRData(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '上传MR数据
+    Public Function Handle_UploadMRData(ByVal context As HttpContext, ByVal data As Object, token As String) As NormalResponse '上传MR数据
         Try
             Dim str As String = data.ToString
             Dim by() As Byte = Convert.FromBase64String(str)
@@ -2636,7 +2708,7 @@ Public Class HTTPHandle
         End Try
     End Function
     '上传性能数据
-    Public Function Handle_UploadMMYMData(ByVal context As HttpContext, ByVal data As Object) As NormalResponse '增加茂名KPI数据
+    Public Function Handle_UploadMMYMData(ByVal context As HttpContext, ByVal data As Object, token As String) As NormalResponse '增加茂名KPI数据
         Try
             Dim str As String = data.ToString
             Dim by() As Byte = Convert.FromBase64String(str)
@@ -2805,8 +2877,9 @@ Public Class HTTPHandle
     '获取首页表格数据
     Public Function Handle_GetIndexPageTable(context As HttpContext) As NormalResponse '2018-12-23 09:54:00 更新 增加首页拼接表
         Dim info As String
+        Dim sb As New StringBuilder
         Try
-            Dim sb As New StringBuilder
+
             Dim workStartTime As Date = Now
             Dim sql As String = "select day from QOE_REPORT_TABLE GROUP BY day ORDER BY day desc"
             Dim dt As DataTable
@@ -2873,9 +2946,9 @@ Public Class HTTPHandle
                         rw("采样点总数(移动)") = row("total_YD".ToUpper)
                         rw("采样点总数(联通)") = row("total_LT".ToUpper)
                         rw("采样点总数(电信)") = row("total_DX".ToUpper)
-                        rw("覆盖率(移动)") = row("coverage_YD".ToUpper)
-                        rw("覆盖率(联通)") = row("coverage_LT".ToUpper)
-                        rw("覆盖率(电信)") = row("coverage_DX".ToUpper)
+                        If IsNothing(row("coverage_YD".ToUpper).ToString) = False Then rw("覆盖率(移动)") = Double.Parse(Val(row("coverage_YD".ToUpper).ToString)).ToString("0.00")
+                        If IsNothing(row("coverage_LT".ToUpper).ToString) = False Then rw("覆盖率(联通)") = Double.Parse(Val(row("coverage_LT".ToUpper).ToString)).ToString("0.00")
+                        If IsNothing(row("coverage_DX".ToUpper).ToString) = False Then rw("覆盖率(电信)") = Double.Parse(Val(row("coverage_DX".ToUpper).ToString)).ToString("0.00")
                         rw("QOE(移动)") = row("QOE_YD".ToUpper)
                         rw("QOE(联通)") = row("QOE_LT".ToUpper)
                         rw("QOE(电信)") = row("QOE_DX".ToUpper)
@@ -2917,20 +2990,22 @@ Public Class HTTPHandle
                                 If IsNothing(info) = False Then
                                     If IsNumeric(info) Then
                                         Dim Cover As Single = 100 * Val(info) / carrierCount
+                                        If Cover > 100 Then Cover = 100
                                         row("覆盖率(移动)") = Format(Cover, "0.00")
                                     End If
                                 End If
 
-                                sql = "select round(avg(vmos),0) from Qoe_Video_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国移动'"
+                                sql = "select round(avg(vmos),2) from Qoe_Video_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国移动'"
                                 info = ORALocalhost.SQLInfo(sql)
                                 If IsNothing(info) = False Then
                                     If IsNumeric(info) Then
                                         Dim vmos As Single = Val(info)
+
                                         row("QOE(移动)") = Format(vmos, "0.00")
                                     End If
                                 End If
 
-                                sql = "select round(avg(vmos),0) from QOE_HTTP_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国移动'"
+                                sql = "select round(avg(vmos),2) from QOE_HTTP_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国移动'"
                                 info = ORALocalhost.SQLInfo(sql)
                                 If IsNothing(info) = False Then
                                     If IsNumeric(info) Then
@@ -2958,12 +3033,13 @@ Public Class HTTPHandle
                                 If IsNothing(info) = False Then
                                     If IsNumeric(info) Then
                                         Dim rsrp As Single = 100 * Val(info) / carrierCount
+                                        If rsrp > 100 Then rsrp = 100
                                         row("覆盖率(联通)") = Format(rsrp, "0.00")
                                     End If
                                 End If
 
 
-                                sql = "select round(avg(vmos),0) from Qoe_Video_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国联通'"
+                                sql = "select round(avg(vmos),2) from Qoe_Video_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国联通'"
                                 info = ORALocalhost.SQLInfo(sql)
                                 If IsNothing(info) = False Then
                                     If IsNumeric(info) Then
@@ -2972,7 +3048,7 @@ Public Class HTTPHandle
                                     End If
                                 End If
 
-                                sql = "select round(avg(vmos),0) from QOE_HTTP_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国联通'"
+                                sql = "select round(avg(vmos),2) from QOE_HTTP_TABLE WHERE substr(datetime,0,10)='" & itm & "' and CARRIER='中国联通'"
                                 info = ORALocalhost.SQLInfo(sql)
                                 If IsNothing(info) = False Then
                                     If IsNumeric(info) Then
@@ -2998,6 +3074,7 @@ Public Class HTTPHandle
                                 If IsNothing(info) = False Then
                                     If IsNumeric(info) Then
                                         Dim Cover As Single = 100 * Val(info) / carrierCount
+                                        If Cover > 100 Then Cover = 100
                                         row("覆盖率(电信)") = Format(Cover, "0.00")
                                     End If
                                 End If
@@ -3091,7 +3168,7 @@ Public Class HTTPHandle
             workStartTime = Now
             Return New NormalResponse(True, "version=1.0 计算量 dayList.length=" & dayList.Count, sb.ToString, resultDt)
         Catch ex As Exception
-            Return New NormalResponse(False, ex.ToString)
+            Return New NormalResponse(False, ex.ToString, "", sb.ToString)
         End Try
     End Function
     '获取首页表格数据 备用接口
@@ -3184,11 +3261,33 @@ Public Class HTTPHandle
     '获取视频资源
     Public Function Handle_GetQOEVideoSource(context As HttpContext) As NormalResponse '获取QOE视频源
         Try
+            Dim ip As String = context.Request.UserHostAddress
+            Dim carrier As String = GetCarrierFromIp(ip)
             Dim sql As String = "select * from QOE_VIDEO_SOURCE where isuse=1"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
             If IsNothing(dt) Then Return New NormalResponse(False, "dt is null")
             If dt.Rows.Count = 0 Then Return New NormalResponse(False, "dt.rows.count=0")
-            Return New NormalResponse(True, "", "", dt)
+            If carrier = "移动" Then
+                For Each row As DataRow In dt.Rows
+                    row("URL") = row("URL").ToString.Replace("221.238.40.153:7062", "111.53.74.132")
+                Next
+            End If
+            Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, dt)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    '获取一键测试地址
+    Public Function Handle_GetOneKeyTestUrl(context As HttpContext) As NormalResponse
+        Try
+            Dim ip As String = context.Request.UserHostAddress
+            Dim carrier As String = GetCarrierFromIp(ip)
+            Dim url As String = "http://221.238.40.153:7062/video/720P_30s_DY__clip1.mp4"
+            url = "http://221.238.40.153:7062/video/720P_30s_DY__clip215.mp4"
+            If carrier = "移动" Then
+                url = url.Replace("221.238.40.153:7062", "111.53.74.132")
+            End If
+            Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, url)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try
@@ -3201,16 +3300,17 @@ Public Class HTTPHandle
         Dim content As String
     End Structure
     '新增模板
-    Public Function Handle_AddSysModule(context As HttpContext, data As Object) As NormalResponse '新建查询模板
+    Public Function Handle_AddSysModule(context As HttpContext, data As Object, token As String) As NormalResponse '新建查询模板
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
             Dim str As String = JsonConvert.SerializeObject(data)
             Dim mi As SysModuleInfo = JsonConvert.DeserializeObject(str, GetType(SysModuleInfo))
             If IsNothing(mi) Then Return New NormalResponse(False, "SysModuleInfo is null,maybe json is error")
-            If mi.content.Contains(Chr(34)) Then
-                Return New NormalResponse(False, "content不允许包含双引号")
-            End If
-            mi.content = mi.content.Replace("'", Chr(34))
+            'If mi.content.Contains(Chr(34)) Then
+            '    Return New NormalResponse(False, "content不允许包含双引号")
+            'End If
+            ' mi.content = mi.content.Replace("'", Chr(34))
+            mi.content = Str2Base64(mi.content)
             Dim sql As String = "insert into sys_module_table (dateTime,type,userName,content) values ('{0}','{1}','{2}','{3}')"
             sql = String.Format(sql, New String() {Now.ToString("yyyy-MM-dd HH:mm:ss"), mi.type, mi.userName, mi.content})
             Dim result As String = ORALocalhost.SqlCMD(sql)
@@ -3246,7 +3346,7 @@ Public Class HTTPHandle
         End Try
     End Function
     '修改模板
-    Public Function Handle_UpdateSysModule(context As HttpContext, data As Object) As NormalResponse  '修改查询模板
+    Public Function Handle_UpdateSysModule(context As HttpContext, data As Object, token As String) As NormalResponse  '修改查询模板
         Try
             If IsNothing(data) Then Return New NormalResponse(False, "post data is null")
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -3257,10 +3357,11 @@ Public Class HTTPHandle
             If Not isExist Then
                 Return New NormalResponse(False, "id does not exist")
             End If
-            If mi.content.Contains(Chr(34)) Then
-                Return New NormalResponse(False, "content不允许包含双引号")
-            End If
-            mi.content = mi.content.Replace("'", Chr(34))
+            'If mi.content.Contains(Chr(34)) Then
+            '    Return New NormalResponse(False, "content不允许包含双引号")
+            'End If
+            'mi.content = mi.content.Replace("'", Chr(34))
+            mi.content = Str2Base64(mi.content)
             sql = "update sys_module_table set dateTime='{0}',userName='{1}',type='{2}',content='{3}' where id=" & mi.id
             sql = String.Format(sql, New String() {Now.ToString("yyyy-MM-dd HH:mm:ss"), mi.userName, mi.type, mi.content})
             Dim result As String = ORALocalhost.SqlCMD(sql)
@@ -3282,7 +3383,8 @@ Public Class HTTPHandle
             If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何数据")
             For Each row In dt.Rows
                 Dim content As String = row("CONTENT").ToString
-                content = content.Replace(Chr(34), "'")
+                '   content = content.Replace(Chr(34), "'")
+                content = Base2str(content)
                 row("CONTENT") = content
             Next
             Return New NormalResponse(True, "", "", dt)
@@ -3291,7 +3393,7 @@ Public Class HTTPHandle
         End Try
     End Function
     '查询否可以升级
-    Public Function Handle_GetCanUpdate(context As HttpContext, data As Object) As NormalResponse
+    Public Function Handle_GetCanUpdate(context As HttpContext, data As Object, token As String) As NormalResponse
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
             Dim obj As JObject = JObject.Parse(str)
@@ -3346,7 +3448,7 @@ Public Class HTTPHandle
     End Function
 
     '新增任务
-    Public Function Handle_AddMission(context As HttpContext, data As Object) As NormalResponse
+    Public Function Handle_AddMission(context As HttpContext, data As Object, token As String) As NormalResponse
         Dim str As String
         Try
             str = JsonConvert.SerializeObject(data)
@@ -3404,7 +3506,7 @@ Public Class HTTPHandle
         Dim PiId As String
     End Structure
     '上传测试信息  调试阶段使用
-    Public Function Handle_UploadPiBridgeMsg(context As HttpContext, data As Object) As NormalResponse
+    Public Function Handle_UploadPiBridgeMsg(context As HttpContext, data As Object, token As String) As NormalResponse
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
             Dim pm As PiBridgeMsgInfo = JsonConvert.DeserializeObject(str, GetType(PiBridgeMsgInfo))
@@ -3426,6 +3528,186 @@ Public Class HTTPHandle
                 Return New NormalResponse(True, result)
             Else
                 Return New NormalResponse(False, result)
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+
+    '用户登陆
+    Public Function Handle_login(ByVal context As HttpContext) As NormalResponse '用户登陆
+        Try
+            Dim account As String = context.Request.QueryString("usr")
+            Dim passWord As String = context.Request.QueryString("pwd")
+            If account = "" Then Return New NormalResponse(False, "用户名为空")
+            If passWord = "" Then Return New NormalResponse(False, "密码为空")
+            Dim sql As String = "select password,token,userName from user_Account where userName='" & account & "' and state<>0"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return New NormalResponse(False, "该用户不存在")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "该用户不存在")
+            Dim row As DataRow = dt.Rows(0)
+            Dim OraPwd As String = row("password".ToUpper).ToString
+            Dim OraToken As String = row("token".ToUpper).ToString
+            Dim oraName As String = row("userName".ToUpper).ToString
+            If IsDBNull(OraToken) Then OraToken = ""
+            If OraPwd = passWord Then
+                If OraToken = "" Then
+                    OraToken = GetNewToken(account, True)
+                End If
+                Dim linfo As New loginInfo(account, oraName, OraToken)
+                Return New NormalResponse(True, "success", "", linfo)
+            Else
+                Return New NormalResponse(False, "用户名或密码错误", "", "")
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Public Function Handle_GetUserNameByToken(context As HttpContext) As NormalResponse
+        Try
+            Dim token As String = context.Request.QueryString("token")
+            Dim userName As String = GetUsrByToken(token)
+            Return New NormalResponse(True, "", "", userName)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    'APP使用，查询本地保存的视频文件有没有实际对应的QOE VIDEO记录,无需token
+    Public Function Handle_CheckScreenRecordFile(context As HttpContext, data As Object, token As String) As NormalResponse
+        Try
+            Dim fileName As String = data.ToString()
+            'screenrecord_filename
+            Dim sql As String = "select * from QOE_VIDEO_TABLE where screenrecord_filename='" & fileName & "' and isscreenrecorduploaded=0"
+            Dim bool As Boolean = ORALocalhost.SqlIsIn(sql)
+            Return New NormalResponse(True, "", "", IIf(bool, 1, 0))
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    'APP使用，上传本地保存的视频文件,无需token
+    Structure ScreenRecordFileInfo
+        Dim fileName As String
+        Dim filelenth As Long
+        Dim base64 As String
+    End Structure
+    Public Function Handle_UploadScreenRecordFile(context As HttpContext, data As Object, token As String) As NormalResponse
+        Try
+            Dim str As String = data.ToString
+            Dim scf As ScreenRecordFileInfo = JsonConvert.DeserializeObject(str, GetType(ScreenRecordFileInfo))
+            Dim sql As String = "select * from QOE_VIDEO_TABLE where screenrecord_filename='" & scf.fileName & "' and isscreenrecorduploaded=0"
+            Dim bool As Boolean = ORALocalhost.SqlIsIn(sql)
+            If Not bool Then
+                Return New NormalResponse(False, "该文件名称不在数据库记录中")
+            End If
+
+            Dim virtualPath As String = "ScreenRecordFiles"
+            Dim buffer() As Byte = Convert.FromBase64String(scf.base64)
+            If IsNothing(buffer) Then
+                Return New NormalResponse(False, "base64内容非法")
+            End If
+            If buffer.Length <> scf.filelenth Then
+                Return New NormalResponse(False, "文件大小与描述不符")
+            End If
+            Dim rootPath = System.Web.HttpContext.Current.Server.MapPath("~/" & virtualPath & "/")
+            Dim filePath As String = rootPath & "/" & scf.fileName
+            If File.Exists(filePath) Then File.Delete(filePath)
+            File.WriteAllBytes(filePath, buffer)
+            sql = "update QOE_VIDEO_TABLE set isscreenrecorduploaded=1 where screenrecord_filename='" & scf.fileName & "'"
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            Return New NormalResponse(True, result, "", "")
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Public Function Handle_UploadOneKeyTestInfo(context As HttpContext, data As Object, token As String) As NormalResponse
+        Try
+            Dim str As String = data.ToString
+            Dim okt As OneKeyTestInfo = JsonConvert.DeserializeObject(Of OneKeyTestInfo)(str)
+            If IsNothing(okt) Then Return New NormalResponse(False, "OneKeyTestInfo from json is null")
+            Dim rid As String = Guid.NewGuid.ToString("N")
+            If IsNothing(okt.pi) = False Then
+                Dim pi As PhoneInfo = okt.pi
+                pi.businessType = "One Key Test"
+                pi.RID = rid
+
+                Dim np As NormalResponse = InsertPhoneInfoToOracle(pi)
+                If np.result = False Then
+                    rid = ""
+                    pi.RID = rid
+                End If
+
+                okt.pi = pi
+                ' InsertPhoneInfoToOracleAsync(pi)
+                'Task.Run(Sub()
+                '             InsertPhoneInfoToOracle(pi)
+                '         End Sub)
+            End If
+            Dim dt As DataTable = ORALocalhost.GetOraTableColumnsOnDt("QOE_ONE_KET_TEST", True)
+            If IsNothing(dt) Then Return New NormalResponse(False, "表QOE_REPORT_TABLE不存在")
+            Dim row As DataRow = dt.NewRow
+            row("DATETIME") = Now.ToString("yyyy-MM-dd HH:mm:ss")
+            row("PHONEMODEL") = okt.pi.phoneModel
+            row("IMEI") = okt.pi.IMEI
+            row("NETTYPE") = okt.pi.netType
+            row("RSRP_SCORE") = okt.net4gStrengthScore.score
+            row("SINR_SCORE") = okt.net4gQualityScore.score
+            row("WIFI_STRENGTH_SCORE") = okt.wifiStrengthScore.score
+            row("WIFI_QUALITY_SCORE") = okt.wifiQualityScore.score
+            row("NETSPEED_SCORE") = okt.netSpeedScore.score
+            row("VIDEOSPEED_SCORE") = okt.videoScore.score
+            row("HTTP_SCORE") = okt.htmlPageScore.score
+            row("TOTAL_SCORE") = okt.togetherScore.score
+            row("NETSPEED_SPEED") = okt.netSpeedTestSpeed
+            row("VIDEOSPEED_SPEED") = okt.videoTestSpeed
+            row("HTTP_RESONSETIME") = okt.httpResonseTime
+            row("QOER_RID") = rid
+
+            dt.Rows.Add(row)
+            Dim result As String = ORALocalhost.SqlCMDListQuickByPara("QOE_ONE_KET_TEST", dt)
+            If result = "success" Then
+                Return New NormalResponse(True, "success", "", "")
+            Else
+                Return New NormalResponse(False, result)
+            End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Private Function InsertPhoneInfoToOracleAsync(pi As PhoneInfo) As Task(Of NormalResponse)
+        Return Task.Run(Function()
+                            Return InsertPhoneInfoToOracle(pi)
+                        End Function)
+    End Function
+
+    Structure ClientLogInfo
+        Dim title As String
+        Dim body As String
+        Dim serverModuleName As String
+        Dim clientIP As String
+        Dim clientUserName As String
+    End Structure
+    Public Function Handle_AddClientLog(context As HttpContext, data As Object, token As String) As NormalResponse
+        Try
+            Dim str As String = JsonConvert.SerializeObject(data)
+            Dim cinfo As ClientLogInfo = JsonConvert.DeserializeObject(str, GetType(ClientLogInfo))
+            If cinfo.title = "" Or cinfo.body = "" Or cinfo.serverModuleName = "" Or cinfo.clientIP = "" Or cinfo.clientUserName = "" Then
+                Return New NormalResponse(False, "日志参数不完整")
+            End If
+            Dim usr As String = GetUsrByToken(token)
+            Dim sql As String = "insert into SYS_VISIT (dateTime,title,body,serverModuleName,clientIP,clientUserName) values ('{0}','{1}','{2}','{3}','{4}','{5}')"
+            Dim list As New List(Of String)
+            list.Add(Now.ToString("yyyy-MM-dd HH:mm:ss"))
+            list.Add(cinfo.title)
+            list.Add(cinfo.body)
+            list.Add(cinfo.serverModuleName)
+            list.Add(cinfo.clientIP)
+            list.Add(usr)
+            sql = String.Format(sql, list.ToArray)
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            If result = "success" Then
+                Return New NormalResponse(True, "新增日志成功")
+            Else
+                Return New NormalResponse(False, result, "", sql)
             End If
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)

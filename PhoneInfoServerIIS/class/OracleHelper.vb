@@ -98,11 +98,12 @@ Public Class OracleHelper
         End Try
     End Function
     Public Function SQLInfo(ByVal CmdString As String) As String
+
+
         Dim SQL As New OracleConnection(NKConnectString)
         Try
-
-            Sql.Open()
-            Dim SQLCommand As OracleCommand = New OracleCommand(CmdString, Sql)
+            SQL.Open()
+            Dim SQLCommand As OracleCommand = New OracleCommand(CmdString, SQL)
             Dim obj As Object = SQLCommand.ExecuteScalar
             Dim str As String = "success"
             If IsNothing(obj) = False Then
@@ -110,7 +111,7 @@ Public Class OracleHelper
                     str = obj.ToString
                 End If
             End If
-            Sql.Close()
+            SQL.Close()
             Return str
         Catch ex As Exception
             SQL.Close()
@@ -138,7 +139,6 @@ Public Class OracleHelper
         If IsNothing(sqlList) Then Return "sqlList=null"
         Dim conn As New OracleConnection(NKConnectString)
         Try
-
             conn.Open()
             Dim str As String = ""
             For Each sq In sqlList
@@ -168,7 +168,7 @@ Public Class OracleHelper
             conn.Close()
             Return dt
         Catch ex As Exception
-            '   File.WriteAllText("d:\oraerrGet.txt", ex.ToString & vbCrLf & sql)
+            File.WriteAllText("d:\oraerrGet.txt", ex.ToString & vbCrLf & sql)
             conn.Close()
             Return dt
         End Try
@@ -180,5 +180,40 @@ Public Class OracleHelper
         Return True
     End Function
 
-
+    Public Function GetOraTableColumns(tableName As String) As String()
+        Try
+            Dim sql As String = "select COLUMN_NAME from user_tab_columns where table_name ='" & tableName.ToUpper & "'"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return Nothing
+            If dt.Rows.Count = 0 Then Return Nothing
+            Dim list As New List(Of String)
+            For Each row As DataRow In dt.Rows
+                If IsNothing(row(0)) = False Then
+                    list.Add(row(0).ToString)
+                End If
+            Next
+            Return list.ToArray
+        Catch ex As Exception
+            Return Nothing
+        End Try
+    End Function
+    Public Function GetOraTableColumnsOnDt(tableName As String, Optional isRemoveId As Boolean = True) As DataTable
+        Try
+            Dim cols() As String = GetOraTableColumns(tableName)
+            If IsNothing(cols) Then Return Nothing
+            If cols.Length = 0 Then Return Nothing
+            Dim dt As New DataTable
+            For Each col In cols
+                If isRemoveId Then
+                    If col = "ID" Then
+                        Continue For
+                    End If
+                End If
+                dt.Columns.Add(col)
+            Next
+            Return dt
+        Catch ex As Exception
+            Return Nothing
+        End Try
+    End Function
 End Class

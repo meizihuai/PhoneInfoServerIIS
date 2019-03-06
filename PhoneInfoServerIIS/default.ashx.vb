@@ -36,6 +36,21 @@ Public Class _default1
         End If
         If method.ToLower = "get" Then
             Dim func As String = context.Request.QueryString("func")
+            Dim token As String = context.Request.QueryString("token")
+            If isNeedCheckToken And NeedCheckTokenFuncs.Contains(func) Then
+                If IsNothing(token) Then
+                    myResponse(context, New NormalResponse(False, "token无效"))
+                    Return
+                End If
+                If token = "" Then
+                    myResponse(context, New NormalResponse(False, "token无效"))
+                    Return
+                End If
+                If CheckToken(token) = False Then
+                    myResponse(context, New NormalResponse(False, "token无效"))
+                    Return
+                End If
+            End If
             Try
                 Dim n As New HTTPHandle()
                 Dim t As Type = n.GetType()
@@ -52,13 +67,13 @@ Public Class _default1
                     Return
                 End If
             Catch ex As Exception
-                myResponse(context, New NormalResponse(False, "您的请求GET func出现了错误", "", ex.Message))
+                myResponse(context, New NormalResponse(False, "您的请求GET func出现了错误,func=" & func & "," & ex.Message))
                 Return
             End Try
-            myResponse(context, New NormalResponse(False, "您的请求GET func不在受理范围内", "", context.Request.Url.PathAndQuery))
-            Return
+            myResponse(context, New NormalResponse(False, "您的请求GET func不在受理范围内,func=" & func ,"", context.Request.Url.PathAndQuery))
+                Return
         End If
-        myResponse(Context, New NormalResponse(False, "您的请求func不在受理范围内", "", Context.Request.Url.PathAndQuery))
+        myResponse(context, New NormalResponse(False, "您的请求不在受理范围内", "", context.Request.Url.PathAndQuery))
     End Sub
 
 
@@ -70,12 +85,27 @@ Public Class _default1
         Try
             Dim ps As PostStu = JsonConvert.DeserializeObject(body, GetType(PostStu))
             func = ps.func
+            Dim token As String = ps.token
+            If isNeedCheckToken And NeedCheckTokenFuncs.Contains(func) Then
+                If IsNothing(token) Then
+                    myResponse(context, New NormalResponse(False, "token无效"))
+                    Return
+                End If
+                If token = "" Then
+                    myResponse(context, New NormalResponse(False, "token无效"))
+                    Return
+                End If
+                If CheckToken(token) = False Then
+                    myResponse(context, New NormalResponse(False, "token无效"))
+                    Return
+                End If
+            End If
             Try
                 Dim n As New HTTPHandle()
                 Dim t As Type = n.GetType()
                 Dim obj As Object = Activator.CreateInstance(t)
                 Dim mf As MethodInfo = t.GetMethod("Handle_" & func)
-                Dim ok As Object = mf.Invoke(obj, New Object() {context, ps.data})
+                Dim ok As Object = mf.Invoke(obj, New Object() {context, ps.data, ps.token})
                 Dim np As NormalResponse = CType(ok, NormalResponse)
                 If IsNothing(np) = False Then
                     myResponse(context, np)
@@ -88,7 +118,7 @@ Public Class _default1
         Catch ex As Exception
 
         End Try
-        myResponse(context, New NormalResponse(False, "您的请求POST func不在受理范围内", "", context.Request.Url.PathAndQuery))
+        myResponse(context, New NormalResponse(False, "您的请求POST func不在受理范围内,func=" & func, "", context.Request.Url.PathAndQuery))
     End Sub
     ReadOnly Property IsReusable() As Boolean Implements IHttpHandler.IsReusable
         Get
