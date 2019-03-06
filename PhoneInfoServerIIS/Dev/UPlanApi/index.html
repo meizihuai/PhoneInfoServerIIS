@@ -34,7 +34,9 @@
             //	GetUpdateWorkLog();
           //  RunSql();
            // AddClientLog();
-            DeleteDtGroup();
+           // DeleteDtGroup();
+          //  GetClientLog();
+            UpdateDtGroup()
         }
         //删除测试用户组
         function DeleteDtGroup() {
@@ -43,6 +45,34 @@
                 func: "DeleteDtGroup",
                 token:"UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
                 groupId:"777"
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        //更新用户组
+        function UpdateDtGroup() {
+            log("UpdateDtGroup...");
+            var d = {
+                func: "UpdateDtGroup",
+                token: "UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
+                groupId: "456",
+                carrier: "移动",
+                province: "广东省",
+                city: "茂名市",
+                line: "11111",
+                name_cm: "222",
+                imei_cm: "22243443",
+                phone_cm: "1111",
+                name_cu: "222",
+                imei_cu: "4433322",
+                phone_cu: "3334443",
+                name_ct: "2222333",
+                imei_ct: "644333222",
+                phone_ct: "222222",
+                modified_datetime: "",
+                modified_by: "111222",
+
             }
             $.get(u, d, function (data) {
                 log(data);
@@ -64,7 +94,19 @@
             };
             var str = JSON.stringify(d);
             $.post(u, str, function (data) {
-              
+           
+                log(data);
+            }, "text");
+        }
+        //获取访客记录
+        function GetClientLog() {
+            log("GetClientLog...");
+            var d = {
+                func: "GetClientLog",
+                token: "UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
+                count:50
+            }
+            $.get(u, d, function (data) {
                 log(data);
             }, "text");
         }

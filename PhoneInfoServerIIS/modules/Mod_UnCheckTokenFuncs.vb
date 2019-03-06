@@ -29,7 +29,9 @@
 "GetSysModule",
 "RefrushProAndCity",
 "GetUserNameByToken",
-"AddClientLog"
+"AddClientLog",
+"GetClientLog",
+"DeleteDtGroup"
         }
     Public UnCheckTokenFuncs As String() = New String() {
           "Test",

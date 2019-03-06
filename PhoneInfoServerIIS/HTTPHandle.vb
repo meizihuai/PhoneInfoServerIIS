@@ -351,7 +351,7 @@ Public Class HTTPHandle
             Dim demo As String = context.Request.QueryString("demo")
 
 
-            'Stepp = 1
+            Stepp = 1
             province = Trim(province) : groupId = Trim(groupId)
             If groupId = "" Then Return New NormalResponse(False, "必须输入groupId")
             'If day = "" Then Return New NormalResponse(False, "必须输入日期")
@@ -362,26 +362,26 @@ Public Class HTTPHandle
 
             Dim Cond As String = "", sql As String
 
-
+            Stepp = 2
             If province <> "" Then Cond = " province='" & province & "'"
-            If city <> "" Then Cond = IIf(Cond = 0, "", " and ") & " city ='" & city & "'"
-            If line <> "" Then Cond = IIf(Cond = 0, "", " and ") & " line ='" & line & "'"
-            If name_cm <> "" Then Cond = IIf(Cond = 0, "", " and ") & " name_cm ='" & name_cm & "'"
-            If imei_cm <> "" Then Cond = IIf(Cond = 0, "", " and ") & " imei_cm ='" & imei_cm & "'"
-            If phone_cm <> "" Then Cond = IIf(Cond = 0, "", " and ") & " phone_cm ='" & phone_cm & "'"
+            If city <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " city ='" & city & "'"
+            If line <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " line ='" & line & "'"
+            If name_cm <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_cm ='" & name_cm & "'"
+            If imei_cm <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_cm ='" & imei_cm & "'"
+            If phone_cm <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_cm ='" & phone_cm & "'"
 
-            If name_cu <> "" Then Cond = IIf(Cond = 0, "", " and ") & " name_cu ='" & name_cu & "'"
-            If imei_cu <> "" Then Cond = IIf(Cond = 0, "", " and ") & " imei_cu ='" & imei_cu & "'"
-            If phone_cu <> "" Then Cond = IIf(Cond = 0, "", " and ") & " phone_cu ='" & phone_cu & "'"
+            If name_cu <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_cu ='" & name_cu & "'"
+            If imei_cu <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_cu ='" & imei_cu & "'"
+            If phone_cu <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_cu ='" & phone_cu & "'"
 
-            If name_ct <> "" Then Cond = IIf(Cond = 0, "", " and ") & " name_ct ='" & name_ct & "'"
-            If imei_ct <> "" Then Cond = IIf(Cond = 0, "", " and ") & " imei_ct ='" & imei_ct & "'"
-            If phone_ct <> "" Then Cond = IIf(Cond = 0, "", " and ") & " phone_ct ='" & phone_ct & "'"
+            If name_ct <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_ct ='" & name_ct & "'"
+            If imei_ct <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_ct ='" & imei_ct & "'"
+            If phone_ct <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_ct ='" & phone_ct & "'"
 
             If Cond.Length = 0 Then
                 Return New NormalResponse(False, "更新条件为空", groupId, "")
             End If
-            sql = "update Worklog set " & Cond & " where groupID='" & groupId & "'"
+            sql = "update Dt_Group set " & Cond & " where groupID='" & groupId & "'"
 
             Stepp = 3
             Dim result As String = ORALocalhost.SqlCMD(sql)
@@ -389,7 +389,7 @@ Public Class HTTPHandle
             If result = "success" Then
                 Return New NormalResponse(True, "更新 " & Cond & " 成功！")
             Else
-                Return New NormalResponse(False, result)
+                Return New NormalResponse(False, result, "", sql)
             End If
             Stepp = 4
             ' "select province,city,district,netType,GDlon,GDlat,RSRP,time,SINR,eNodeBId,CellId from SDKTABLE"
@@ -3709,6 +3709,33 @@ Public Class HTTPHandle
             Else
                 Return New NormalResponse(False, result, "", sql)
             End If
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Public Function Handle_GetClientLog(context As HttpContext) As NormalResponse
+        Try
+            Dim countstr As String = context.Request.QueryString("count")
+            Dim count As Integer = 0
+            If IsNothing(countstr) = False Then
+                If countstr <> "" Then
+                    If IsNumeric(countstr) Then
+                        count = Val(countstr)
+                    End If
+                End If
+            End If
+            Dim sql As String = "select * from SYS_VISIT order by dateTime desc"
+            If count > 0 Then
+                sql = OracleSelectPage(sql, 0, count)
+            End If
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then
+                Return New NormalResponse(False, "没有任何记录")
+            End If
+            If dt.Rows.Count = 0 Then
+                Return New NormalResponse(False, "没有任何记录")
+            End If
+            Return New NormalResponse(True, "", "", dt)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try

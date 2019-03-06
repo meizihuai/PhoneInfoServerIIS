@@ -67,7 +67,7 @@ Public Class _default1
                     Return
                 End If
             Catch ex As Exception
-                myResponse(context, New NormalResponse(False, "您的请求GET func出现了错误,func=" & func & "," & ex.Message))
+                myResponse(context, New NormalResponse(False, "您的请求GET func出现了错误,func=" & func & "," & ex.Message, ex.ToString, context.Request.Url.PathAndQuery))
                 Return
             End Try
             myResponse(context, New NormalResponse(False, "您的请求GET func不在受理范围内,func=" & func ,"", context.Request.Url.PathAndQuery))
