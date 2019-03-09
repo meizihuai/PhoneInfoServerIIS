@@ -158,7 +158,7 @@
     </Compile>
     <Compile Include="HTTPHandle.vb" />
     <Compile Include="class\MissionDog.vb" />
-    <Compile Include="modules\Module2.vb" />
+    <Compile Include="modules\Mod_Normal_Handle.vb" />
     <Compile Include="modules\Mod_Response.vb" />
     <Compile Include="modules\Mod_UnCheckTokenFuncs.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />

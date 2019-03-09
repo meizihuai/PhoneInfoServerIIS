@@ -15,7 +15,7 @@ Imports System.Threading
 Imports System.Threading.Thread
 Imports System.IO.Compression
 
-Module Module2
+Module Mod_Normal_Handle
     Public myServerUrl As String = "http://111.53.74.132:7062"
     Public ConnectSQL As String = "server=localhost;DataBase=PhoneInfo;User ID=root;Pwd=Smart9080;charset='utf8'"
     Public pgSQLLocalhost As New PgSQLHelper("localhost", 5432, "PhoneInfo", "mzh", "Smart9080")

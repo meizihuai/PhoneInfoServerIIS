@@ -1366,7 +1366,6 @@ Public Class HTTPHandle
         If (time > 500) Then Return 2
         If (time > 200) Then Return 3
         If (time > 50) Then Return 4
-
         Return 5
     End Function
     '获取QOER所有入网设备信息
