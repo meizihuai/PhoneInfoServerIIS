@@ -1,4 +1,6 @@
-﻿Public Class AppMission
+﻿
+
+Public Class AppMission
     Public id As Long
     Public dateTime As String
     Public userName As String

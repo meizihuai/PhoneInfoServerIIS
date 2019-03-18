@@ -32,19 +32,64 @@
             //	GetWorkLog();
             //UploadWorkLog();
             //	GetUpdateWorkLog();
-          //  RunSql();
-           // AddClientLog();
-           // DeleteDtGroup();
-          //  GetClientLog();
-            UpdateDtGroup()
+            //  RunSql();
+            // AddClientLog();
+            // DeleteDtGroup();
+            //  GetClientLog();
+          //  UpdateDtGroup();
+           // AddMission();
+          //  GetOnlineMission();
+            GetAllMission();
+        }
+         //获取正在执行的测试任务
+        function GetOnlineMission() {
+            var d = {
+                func: "GetOnlineMission",
+                token: "token",
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        //获取所有任务
+        function GetAllMission() {
+            var d = {
+                func: "GetAllMission",
+                token: "token",
+            }
+            $.get(u, d, function (data) {
+                log(data);
+            }, "text");
+        }
+        //新增测试任务
+        function AddMission() {
+            var d = {
+                userName:"",//测试人员名称(针对单用户任务,若为空，则后台会自动查询imei关联的用户名)
+                imei: "866831048299052", //测试终端 imei码(针对单用户任务)  imei和groupId不可同时为空
+                phoneModel: "", //测试终端机型(针对单用户任务，若为空，则后台会自动查询imei关联的机型)
+                groupId: "",  //测试组ID，若此处不为空，则该任务属于测试组任务，服务器会忽略上面三个参数
+                missionType:"", //任务类型  可空，用于区分任务
+                missionRemark: "", //任务备注，可空
+                startTime:"2019-03-15 12:20:00", //任务监控开始时间
+                endTime: "2019-03-15 12:50:00" //任务监控结束始时间
+            };
+            var ps = {
+                func: "AddMission",
+                token: "token",
+                data: d
+            };
+            var str = JSON.stringify(ps);
+            $.post(u, str, function (data) {
+                log(data);
+            }, "text");
         }
         //删除测试用户组
         function DeleteDtGroup() {
             log("DeleteDtGroup...");
             var d = {
                 func: "DeleteDtGroup",
-                token:"UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
-                groupId:"777"
+                token: "UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
+                groupId: "777"
             }
             $.get(u, d, function (data) {
                 log(data);
@@ -79,7 +124,7 @@
             }, "text");
         }
         //上传访客记录
-        function AddClientLog() {  
+        function AddClientLog() {
             log("AddClientLog...");
             var d = {
                 func: "AddClientLog",
@@ -87,14 +132,14 @@
                 data: {
                     title: "标题测试",    //标题
                     serverModuleName: "QOER查询页面",   //查阅的板块
-                    body: "内容测试",                //日志内容，string类型，若存json，需转string后存     
+                    body: "内容测试",                //日志内容，string类型，若存json，需转string后存
                     clientIP: "156.123.145.8",      //访客IP
-                    clientUserName:"admin"          //访客用户名   后台会取token所对应的用户名，此处尽量也带上
+                    clientUserName: "admin"          //访客用户名   后台会取token所对应的用户名，此处尽量也带上
                 }
             };
             var str = JSON.stringify(d);
             $.post(u, str, function (data) {
-           
+
                 log(data);
             }, "text");
         }
@@ -104,7 +149,7 @@
             var d = {
                 func: "GetClientLog",
                 token: "UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
-                count:50
+                count: 50
             }
             $.get(u, d, function (data) {
                 log(data);
@@ -120,7 +165,7 @@
 
             var d = {
                 func: "RunSQL",
-                token:"UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
+                token: "UnVuU1FMZXIjMjAxOS0wMi0yMiAxMjo0ODoxMg==",
                 data: "select * from QOE_VIDEO_TABLE  where datetime>'2019-02-21 0:00:00' and datetime<'2019-02-22 0:00:00' "
             };
 
@@ -129,7 +174,7 @@
                 console.log(data);
                 log(data);
             }, "text");
-           // log("---->RunSql End...");
+            // log("---->RunSql End...");
         }
 
 
@@ -456,7 +501,7 @@
             //$.get(function(data),d){                log("UploadLTECellInfo0:"+ data);            },"text");
         }
 
-        function GetUeQoeReportRSRPPoint() {  
+        function GetUeQoeReportRSRPPoint() {
             log("获取GetUeQoeReportRSRPPoint数据点...");
             var d = {
                 func: "GetUeQoeReportRSRPPoint",
@@ -464,10 +509,10 @@
                 imei: "868375023586891",
                 netType: "",
                 grid: "",
-                startTime: "2019-01-02",  
+                startTime: "2019-01-02",
                 endTime: "2019-01-03",
-                readIndex: 0, 
-                readCount: 100  
+                readIndex: 0,
+                readCount: 100
             }
             $.get(u, d, function (data) {
                 log("GetUeQoeReportRSRPPoint:" + data);
@@ -496,7 +541,7 @@
             log("获取GetQoeVideoPoint数据点...");
             var d = {
                 func: "GetQoeVideoPoint",
-                token:"928453310",
+                token: "928453310",
                 carrier: "中国电信",
                 province: "",
                 city: "",

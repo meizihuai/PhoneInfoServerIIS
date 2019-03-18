@@ -75,8 +75,8 @@ Public Class DeviceHelper
             sql = String.Format(sql, list.ToArray())
             Dim result As String = ORALocalhost.SqlCMD(sql)
         End If
-        sql = "update app_mission_table set lastDateTime='" & time & "' where imei='" & pi.IMEI & "' and isClosed=0"
-        ORALocalhost.SqlCMD(sql)
+
+
     End Sub
     Public Shared Function AddMission(am As AppMission) As NormalResponse
         Dim id As String = am.id
@@ -107,15 +107,73 @@ Public Class DeviceHelper
         Catch ex As Exception
             Return New NormalResponse(False, "开始时间或结束时间格式非法")
         End Try
+        Dim isGroup As Boolean = False
+        Dim sql As String = ""
+        Dim groupImeilist As New List(Of String)
+        If groupId <> "" Then
+            '查询groupId表
+            Dim groupDt As DataTable = ORALocalhost.SqlGetDT("select * from DT_GROUP where groupid='" & groupId & "'")
+            If IsNothing(groupDt) Then
+                Return New NormalResponse(False, "该测试组ID不存在")
+            End If
+            If groupDt.Rows.Count = 0 Then
+                Return New NormalResponse(False, "该测试组ID不存在")
+            End If
+            Dim groupRow As DataRow = groupDt.Rows(0)
+            Dim IMEI_CM As String = groupRow("IMEI_CM").ToString()
+            Dim IMEI_CU As String = groupRow("IMEI_CU").ToString()
+            Dim IMEI_CT As String = groupRow("IMEI_CT").ToString()
+            Dim userName_CM As String = groupRow("NAME_CM").ToString()
+            Dim userName_CU As String = groupRow("NAME_CU").ToString()
+            Dim userName_CT As String = groupRow("NAME_CT").ToString()
+            Dim userNameList As New List(Of String)
 
-        Dim sql As String = "select * from app_mission_table where  imei='{0}' and isClosed=0 and " &
+
+            Dim list As New List(Of String)
+            Dim modelList As New List(Of String)
+            If IMEI_CM <> "" Then list.Add(IMEI_CM) : userNameList.Add(userName_CM) ： modelList.Add(GetPhoneModelByImei(IMEI_CM))
+            If IMEI_CU <> "" Then list.Add(IMEI_CU) : userNameList.Add(userName_CU) ： modelList.Add(GetPhoneModelByImei(IMEI_CU))
+            If IMEI_CT <> "" Then list.Add(IMEI_CT) : userNameList.Add(userName_CT) ： modelList.Add(GetPhoneModelByImei(IMEI_CT))
+            If list.Count = 0 Then
+                Return New NormalResponse(False, "任务下发失败，该测试组不存在任何测试设备")
+            End If
+            sql = "select * from app_mission_table where  groupId='{0}' and isClosed=0 and " &
                                                        "((StartTime between '{1}' and '{2}' or EndTime between '{1}' and '{2}') " &
                                                        "or (StartTime<='{1}' and EndTime>='{2}'))"
-        sql = String.Format(sql, imei, startTime, endTime)
-        Dim isExist As Boolean = ORALocalhost.SqlIsIn(sql)
-        If isExist Then
-            Return New NormalResponse(False, "该时段设备正忙")
+            sql = String.Format(sql, groupId, startTime, endTime)
+            If ORALocalhost.SqlIsIn(sql) Then
+                Return New NormalResponse(False, "任务下发失败，该时段测试组'" & groupId & "'正忙")
+            End If
+
+            For Each itm In list
+                sql = "select * from app_mission_table where  imei like '%{0}%' and isClosed=0 and " &
+                                                       "((StartTime between '{1}' and '{2}' or EndTime between '{1}' and '{2}') " &
+                                                       "or (StartTime<='{1}' and EndTime>='{2}'))"
+                sql = String.Format(sql, itm, startTime, endTime)
+                If ORALocalhost.SqlIsIn(sql) Then
+                    Return New NormalResponse(False, "任务下发失败，该时段测试组内设备'" & itm & "'正忙")
+                End If
+
+            Next
+            imei = JsonConvert.SerializeObject(list)
+            groupImeilist = list
+            phoneModel = JsonConvert.SerializeObject(modelList)
+            userName = JsonConvert.SerializeObject(userNameList)
+            deviceCount = list.Count
+            isGroup = True
+        Else
+            sql = "select * from app_mission_table where imei like '%{0}%' and isClosed=0 and " &
+                                                       "((StartTime between '{1}' and '{2}' or EndTime between '{1}' and '{2}') " &
+                                                       "or (StartTime<='{1}' and EndTime>='{2}'))"
+            sql = String.Format(sql, imei, startTime, endTime)
+            If ORALocalhost.SqlIsIn(sql) Then
+                Return New NormalResponse(False, "任务下发失败，该时段设备'" & imei & "'正忙")
+            End If
+            If userName = "" Then userName = GetUserNameByImei(imei)
+            If phoneModel = "" Then phoneModel = GetPhoneModelByImei(imei)
+            deviceCount = 1
         End If
+
         Dim dt As New DataTable
         Dim cols As String() = GetOraTableColumns("app_mission_table")
         If IsNothing(cols) Then Return New NormalResponse(False, "数据库中任务表不存在，请联系管理员")
@@ -125,14 +183,9 @@ Public Class DeviceHelper
             End If
         Next
         dateTime = Now.ToString("yyyy-MM-dd HH:mm:ss")
-        deviceCount = 1
-        If groupId <> "" Then
-            '查询groupId表
-
-        End If
         Dim row As DataRow = dt.NewRow
         row("dateTime".ToUpper) = dateTime
-        row("userName".ToUpper) = GetUserNameByImei(imei)
+        row("userName".ToUpper) = userName
         row("imei".ToUpper) = imei
         row("phoneModel".ToUpper) = phoneModel
         row("groupId".ToUpper) = groupId
@@ -143,8 +196,17 @@ Public Class DeviceHelper
         row("endTime".ToUpper) = endTime
         row("status".ToUpper) = "新建"
         row("isClosed".ToUpper) = -2
-        row("PhoneModel".ToUpper) = GetPhoneModelByImei(imei)
         row("LastDateTime".ToUpper) = dateTime
+        row("isGroup".ToUpper) = IIf(isGroup, 1, 0)
+        If isGroup Then
+            If IsNothing(groupImeilist) = False Then
+                Dim list As New List(Of MissionDog.TimeAndImei)
+                For Each itm In groupImeilist
+                    list.Add(New MissionDog.TimeAndImei(dateTime, itm, "未开启"))
+                Next
+                row("LastTimeAndImei".ToUpper) = JsonConvert.SerializeObject(list)
+            End If
+        End If
         dt.Rows.Add(row)
         Dim result As String = ORALocalhost.SqlCMDListQuickByPara("app_mission_table", dt)
         If result = "success" Then
@@ -153,6 +215,7 @@ Public Class DeviceHelper
             Return New NormalResponse(False, "任务添加失败！" + result)
         End If
     End Function
+
     Private Shared Function GetPhoneModelByImei(imei As String) As String
         Dim sql As String = "select * from deviceTable where imei='" & imei & "'"
         Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
@@ -163,6 +226,7 @@ Public Class DeviceHelper
         If IsNothing(str) Then str = ""
         Return str
     End Function
+
     Private Shared Function GetUserNameByImei(imei As String) As String
         Dim sql As String = "select * from deviceTable where imei='" & imei & "'"
         Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)

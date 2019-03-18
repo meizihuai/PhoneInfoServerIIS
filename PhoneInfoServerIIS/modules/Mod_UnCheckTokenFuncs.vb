@@ -54,6 +54,9 @@
 "login",
 "CheckScreenRecordFile",
 "UploadScreenRecordFile",
-"UploadOneKeyTestInfo"
+"UploadOneKeyTestInfo",
+"GetNewQoEVideoInfo",
+"GetOneKeyTestHisIdList",
+"GetOneKeyTestHisData"
        }
 End Module

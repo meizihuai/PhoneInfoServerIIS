@@ -24,6 +24,7 @@ Imports System.Threading.Tasks
 ''' <summary>
 '''本类用于处理HTTP Get和Post请求，主要API都在此，通过反射来获取API处理程序
 ''' </summary>
+'''此版本由梅子怀最后更新，版本号V3.0.0，更新时间2019-03-11 15:35:00
 Public Class HTTPHandle
     Structure DtInfo '测试组信息
         Dim province As String
@@ -770,10 +771,24 @@ Public Class HTTPHandle
             row("xyZaSpeed".ToUpper) = json
         End If
         Try
-            DeviceHelper.ChangeDeviceStatus(pi)
+            '修改设备表 设备的经纬度等参数信息
+            Dim th As New Thread(Sub()
+                                     DeviceHelper.ChangeDeviceStatus(pi)
+                                 End Sub)
+            th.Start()
         Catch ex As Exception
 
         End Try
+        Try
+            '修改任务表 任务最后数据时间等，任务监控模块告警生成
+            Dim th As New Thread(Sub()
+                                     MissionDog.OnDeviceDataCome(pi)
+                                 End Sub)
+            th.Start()
+        Catch ex As Exception
+
+        End Try
+
         dt.Rows.Add(row)
         Dim result As String = ORALocalhost.SqlCMDListQuickByPara("QOE_REPORT_TABLE", dt)
         If result = "success" Then
@@ -3257,7 +3272,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
-    '获取视频资源
+    '获取视频资源 旧版本
     Public Function Handle_GetQOEVideoSource(context As HttpContext) As NormalResponse '获取QOE视频源
         Try
             Dim ip As String = context.Request.UserHostAddress
@@ -3272,6 +3287,103 @@ Public Class HTTPHandle
                 Next
             End If
             Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, dt)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Structure QoEVideoScouceInfo
+        Dim name As String
+        Dim url As String
+        Dim fileSize As String
+        Dim videoSecond As Long
+        Dim type As String
+        Dim movieName As String
+        Dim movieIndex As Integer
+        Dim video_clarity As String
+        Dim isRand As Boolean
+        Dim secondGrad As Long
+        Dim wantType As String
+    End Structure
+    '获取新视频资源 新版本
+    Public Function Handle_GetNewQoEVideoInfo(context As HttpContext, data As Object, token As String) As NormalResponse
+        Try
+            Dim isHaveOld As Boolean = False
+            Dim str As String = ""
+            If IsNothing(data) Then
+                isHaveOld = False
+            Else
+                str = data.ToString
+            End If
+            If str = "" Then isHaveOld = False
+            Dim qvi As QoEVideoScouceInfo
+            Try
+                qvi = JsonConvert.DeserializeObject(Of QoEVideoScouceInfo)(str)
+                If IsNothing(qvi) = False Then
+                    isHaveOld = True
+                End If
+            Catch ex As Exception
+
+            End Try
+            Dim ip As String = context.Request.UserHostAddress
+            Dim carrier As String = GetCarrierFromIp(ip)
+            Dim sql As String = "select * from QOE_VIDEO_SOURCE where isuse=1"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return New NormalResponse(False, "dt is null")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "dt.rows.count=0")
+            Dim realList As New List(Of QoEVideoScouceInfo)
+            For Each row As DataRow In dt.Rows
+                Dim tmp As New QoEVideoScouceInfo
+                tmp.name = row("name".ToUpper)
+                tmp.url = row("url".ToUpper)
+                tmp.fileSize = row("fileSize".ToUpper)
+                tmp.videoSecond = row("videoSecond".ToUpper)
+                tmp.type = row("type".ToUpper)
+                tmp.movieName = row("movieName".ToUpper)
+                tmp.movieIndex = row("movieIndex".ToUpper)
+                tmp.video_clarity = row("video_clarity".ToUpper)
+                tmp.isRand = row("isRand".ToUpper)
+                tmp.secondGrad = row("secondGrad".ToUpper)
+                realList.Add(tmp)
+            Next
+            If qvi.wantType = "" Then qvi.wantType = "全部"
+            Dim resultVideoInfo As New QoEVideoScouceInfo
+            If isHaveOld Then
+                If qvi.wantType <> "全部" Then
+                    Dim tmpList As List(Of QoEVideoScouceInfo) = (From s In realList Where s.type = qvi.wantType Select s).ToList()
+                    If IsNothing(tmpList) = False Then
+                        realList = tmpList
+                    End If
+                End If
+                Dim isNeedRand As Boolean = True
+                If qvi.isRand = False And qvi.movieName <> "" Then
+                    isNeedRand = False
+                End If
+                If isNeedRand Then
+                    resultVideoInfo = realList(New Random().Next(realList.Count - 1))
+                Else
+                    Dim isFind As Boolean = False
+                    For Each video In realList
+                        If video.movieName = qvi.movieName Then
+                            If video.movieIndex = qvi.movieIndex + 1 Then
+                                isFind = True
+                                resultVideoInfo = video
+                                Exit For
+                            End If
+                        End If
+                    Next
+                    If isFind = False Then
+                        resultVideoInfo = realList(New Random().Next(realList.Count - 1))
+                    End If
+                End If
+            End If
+            If IsNothing(resultVideoInfo) Then
+                resultVideoInfo = realList(New Random().Next(realList.Count - 1))
+            End If
+            If carrier = "移动" Then
+                resultVideoInfo.url = resultVideoInfo.url.Replace("221.238.40.153:7062", "111.53.74.132")
+            End If
+            realList = Nothing
+            Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, resultVideoInfo)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try
@@ -3462,10 +3574,19 @@ Public Class HTTPHandle
     '查询在线正在执行的任务
     Public Function Handle_GetOnlineMission(context As HttpContext) As NormalResponse
         Dim endTime As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
-        Dim sql As String = "select * from app_mission_table where isClosed=0"
+        Dim sql As String = "select * from app_mission_table where isClosed=0 order by dateTime desc"
         Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
         If IsNothing(dt) Then Return New NormalResponse(False, "没有正在执行的任务")
         If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有正在执行的任务")
+        Return New NormalResponse(True, "", "", dt)
+    End Function
+    '查询所有任务
+    Public Function Handle_GetAllMission(context As HttpContext) As NormalResponse
+        Dim endTime As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
+        Dim sql As String = "select * from app_mission_table order by dateTime desc"
+        Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+        If IsNothing(dt) Then Return New NormalResponse(False, "没有任何任务")
+        If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何任务")
         Return New NormalResponse(True, "", "", dt)
     End Function
     '查询异常任务
@@ -3477,6 +3598,7 @@ Public Class HTTPHandle
         If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有异常任务")
         Return New NormalResponse(True, "", "", dt)
     End Function
+
     '查询设备权限
     Public Function Handle_GetDevicePermission(context As HttpContext) As NormalResponse
         Dim imei As String = context.Request.QueryString("imei")
@@ -3641,7 +3763,7 @@ Public Class HTTPHandle
                 '             InsertPhoneInfoToOracle(pi)
                 '         End Sub)
             End If
-            Dim dt As DataTable = ORALocalhost.GetOraTableColumnsOnDt("QOE_ONE_KET_TEST", True)
+            Dim dt As DataTable = ORALocalhost.GetOraTableColumnsOnDt("QOE_ONE_KEY_TEST", True)
             If IsNothing(dt) Then Return New NormalResponse(False, "表QOE_REPORT_TABLE不存在")
             Dim row As DataRow = dt.NewRow
             row("DATETIME") = Now.ToString("yyyy-MM-dd HH:mm:ss")
@@ -3662,7 +3784,7 @@ Public Class HTTPHandle
             row("QOER_RID") = rid
 
             dt.Rows.Add(row)
-            Dim result As String = ORALocalhost.SqlCMDListQuickByPara("QOE_ONE_KET_TEST", dt)
+            Dim result As String = ORALocalhost.SqlCMDListQuickByPara("QOE_ONE_KEY_TEST", dt)
             If result = "success" Then
                 Return New NormalResponse(True, "success", "", "")
             Else
@@ -3685,6 +3807,7 @@ Public Class HTTPHandle
         Dim clientIP As String
         Dim clientUserName As String
     End Structure
+    '增加访问日志
     Public Function Handle_AddClientLog(context As HttpContext, data As Object, token As String) As NormalResponse
         Try
             Dim str As String = JsonConvert.SerializeObject(data)
@@ -3712,6 +3835,7 @@ Public Class HTTPHandle
             Return New NormalResponse(False, ex.ToString)
         End Try
     End Function
+    '获取访问日志
     Public Function Handle_GetClientLog(context As HttpContext) As NormalResponse
         Try
             Dim countstr As String = context.Request.QueryString("count")
@@ -3735,6 +3859,37 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "没有任何记录")
             End If
             Return New NormalResponse(True, "", "", dt)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    'APP获取设备一键测试ID列表
+    Public Function Handle_GetOneKeyTestHisIdList(context As HttpContext) As NormalResponse
+        Try
+            Dim imei As String = context.Request.QueryString("imei")
+            If IsNothing(imei) Then Return New NormalResponse(False, "设备Id为空")
+            If imei = "" Then Return New NormalResponse(False, "设备Id为空")
+            Dim sql As String = "select * from QOE_ONE_KEY_TEST where imei='" & imei & "' order by dateTime desc"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return New NormalResponse(False, "没有任何记录")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何记录")
+            Return New NormalResponse(True, "", "", dt)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    '根据一键测试的ID来获取具体数据
+    Public Function Handle_GetOneKeyTestHisData(context As HttpContext) As NormalResponse
+        Try
+            Dim id As String = context.Request.QueryString("id")
+            If IsNothing(id) Then Return New NormalResponse(False, "id为空")
+            If id = "" Then Return New NormalResponse(False, "id为空")
+            Dim sql As String = "select * from QOE_ONE_KEY_TEST where id=" & id
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return New NormalResponse(False, "没有任何记录")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何记录")
+            Dim row As DataRow = dt.Rows(0)
+            Return New NormalResponse(True, "", "", row)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try
