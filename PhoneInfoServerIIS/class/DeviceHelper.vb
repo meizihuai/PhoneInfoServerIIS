@@ -104,6 +104,8 @@ Public Class DeviceHelper
             If taskEndTime <= Now.AddMinutes(1) Then
                 Return New NormalResponse(False, "结束时间必须大于当前时间")
             End If
+            startTime = taskStartTime.ToString("yyyy-MM-dd HH:mm:ss")
+            endTime = taskEndTime.ToString("yyyy-MM-dd HH:mm:ss")
         Catch ex As Exception
             Return New NormalResponse(False, "开始时间或结束时间格式非法")
         End Try

@@ -217,7 +217,7 @@ Public Class HTTPHandle
 
             Dim sql As String = "select groupId,line,name_cm,imei_cm,phone_cm,name_cu,imei_cu,phone_cu,name_ct,imei_ct,phone_ct from Dt_Group "
 
-            If groupId <> "" Then sql = sql & " where groupId='" & groupId & "'"
+            If groupId <> "" Then sql = sql & " where groupId='" & groupId & "'  order by modified_datetime desc"
             'If province <> "" Then sql = sql & " and province='" & province & "'"
             'If city <> "" Then sql = sql & " and city='" & city & "'"
 
@@ -269,7 +269,12 @@ Public Class HTTPHandle
                         dt.Columns.Add(col)
                     End If
                 Next
+                Dim nowTime As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
                 For Each itm In DtList
+
+                    If itm.groupId = "" Then
+                        Return New NormalResponse(False, "不允许空白groupId")
+                    End If
                     If ORALocalhost.SqlIsIn("select * from dt_group where groupid='" & itm.groupId & "'") Then
                         Return New NormalResponse(False, "groupId '" & itm.groupId & "'已存在")
                     End If
@@ -287,7 +292,7 @@ Public Class HTTPHandle
                     row("name_ct".ToUpper) = itm.name_ct
                     row("imei_ct".ToUpper) = itm.imei_ct
                     row("phone_ct".ToUpper) = itm.phone_ct
-                    row("modified_datetime".ToUpper) = itm.modified_datetime
+                    row("modified_datetime".ToUpper) = nowTime
                     row("modified_by".ToUpper) = itm.modified_by
                     row("demo".ToUpper) = itm.demo
                     dt.Rows.Add(row)
@@ -1480,7 +1485,7 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "运营商错误")
                 ' Return New NormalResponse(False, "必须选择省份")carrier,
             End If
-            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,eNodeBId,CellId,Grid,VMOS from QOE_HTTP_TABLE "
+            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,eNodeBId,CellId,Grid,VMOS,imei from QOE_HTTP_TABLE "
             Dim doHaveWhere As Boolean = False
             If province <> "" Then
                 sql = sql & " where province='" & province & "'"
@@ -1621,7 +1626,7 @@ Public Class HTTPHandle
                 ' Return New NormalResponse(False, "必须选择省份")carrier,
             End If
             Dim sql As String = "select datetime,province,city,district,net_Type,GDlon,GDlat,SIGNAL_STRENGTH,SINR,eNodeBId,CellId,Grid," &
-                                "VMOS,screenrecord_filename,isscreenrecorduploaded from Qoe_Video_TABLE "
+                                "VMOS,screenrecord_filename,isscreenrecorduploaded,imei from Qoe_Video_TABLE "
             Dim doHaveWhere As Boolean = False
             If province <> "" Then
                 sql = sql & " where province='" & province & "'"
@@ -1757,7 +1762,7 @@ Public Class HTTPHandle
             Dim startTime As Date = Now
             Dim sql As String = "select province,city,district from proAndcityTable order by province asc"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-            sb.AppendLine("查询数据库:" & GetTimeSpam(startTime))
+            sb.AppendLine("查询数据库:" & GetTimeSpan(startTime))
             startTime = Now
             If IsNothing(dt) Then
                 Return New NormalResponse(False, "没有任何数据")
@@ -1796,7 +1801,7 @@ Public Class HTTPHandle
                     End If
                 End If
             Next
-            sb.AppendLine("归类计算:" & GetTimeSpam(startTime))
+            sb.AppendLine("归类计算:" & GetTimeSpan(startTime))
             startTime = Now
             Return New NormalResponse(True, sb.ToString, "", list)
         Catch ex As Exception
@@ -1808,7 +1813,7 @@ Public Class HTTPHandle
     Public Function Handle_GetQoeReportRSRPPoint(ByVal context As HttpContext) As NormalResponse '获得QoeReport数据  Old Name :Handle_GetSmartPlanRSRPPoint      New： 
         Dim Stepp As Single = 0
         Try
-
+            Dim handleStartTime As Date = Now
             Dim carrier As String = context.Request.QueryString("carrier") '运营商 {'中国联通','中国移动','中国电信'}
             Dim province As String = context.Request.QueryString("province")
             Dim city As String = context.Request.QueryString("city")
@@ -1823,7 +1828,7 @@ Public Class HTTPHandle
             If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
             If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
 
-            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid,ENODEBID_CELLID,isOutSide,isGpsOpen from QOE_REPORT_TABLE "
+            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,Grid,ENODEBID_CELLID,isOutSide,isGpsOpen,imei from QOE_REPORT_TABLE "
 
             sql = sql & " where carrier='" & carrier & "'"
             If province <> "" Then sql = sql & " and province='" & province & "'"
@@ -1862,7 +1867,9 @@ Public Class HTTPHandle
                 End If
             End If
             Stepp = 3
+            Dim sqlCheckStartTime As Date = Now
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            Dim sqlCheckTime As String = GetTimeSpan(sqlCheckStartTime)
             If IsNothing(dt) Then
                 Return New NormalResponse(False, "没有任何数据", sql, "")
             End If
@@ -1887,7 +1894,8 @@ Public Class HTTPHandle
             dt.Columns(12).ColumnName = "Grid"
             dt.Columns(13).ColumnName = "eNodeBid_Cellid"
             'Stepp = 5
-            Return New NormalResponse(True, "", "", dt)
+            Dim handleCheckTime As String = GetTimeSpan(handleStartTime)
+            Return New NormalResponse(True, "数据库耗时:" & sqlCheckTime & ",后台处理总耗时:" & handleCheckTime, "", dt)
         Catch ex As Exception
             Return New NormalResponse(False, "GetQoeR RSRPPointErr:" & ex.Message & ",Step=" & Stepp)
         End Try
@@ -1900,9 +1908,9 @@ Public Class HTTPHandle
         Try
 
             Dim carrier As String = context.Request.QueryString("carrier") '运营商 {'中国联通','中国移动','中国电信'}
-            'Dim province As String = context.Request.QueryString("province")
-            'Dim city As String = context.Request.QueryString("city")
-            'Dim district As String = context.Request.QueryString("district")
+            Dim province As String = context.Request.QueryString("province")
+            Dim city As String = context.Request.QueryString("city")
+            Dim district As String = context.Request.QueryString("district")
             Dim imei As String = context.Request.QueryString("imei")
             Dim netType As String = context.Request.QueryString("netType")
             Dim grid As String = context.Request.QueryString("grid")
@@ -1913,18 +1921,20 @@ Public Class HTTPHandle
             'Stepp = 1
 
             If imei = "" Then Return New NormalResponse(False, "必须选择imei")
-            If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
+            '  If carrier = "" Then Return New NormalResponse(False, "必须选择运营商")
 
-            If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
+            ' If carrier <> "中国移动" And carrier <> "中国联通" And carrier <> "中国电信" Then Return New NormalResponse(False, "运营商错误")
 
-            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId from QOE_REPORT_TABLE "
+            Dim sql As String = "select datetime,province,city,district,netType,GDlon,GDlat,RSRP,SINR,QoeR,eNodeBId,CellId,imei from QOE_REPORT_TABLE "
 
             sql = sql & " where imei='" & imei & "'"
             If carrier <> "" Then sql = sql & " and carrier='" & carrier & "'"
 
             If netType <> "" Then sql = sql & " and netType='" & netType & "'"
             If grid <> "" Then sql = sql & " and grid='" & grid & "'"
-
+            If province <> "" Then sql = sql & " and province='" & province & "'"
+            If city <> "" Then sql = sql & " and city='" & city & "'"
+            If district <> "" Then sql = sql & " and district='" & district & "'"
 
             If startTime <> "" Then
                 If endTime <> "" Then
@@ -2336,7 +2346,7 @@ Public Class HTTPHandle
             If dt.Rows.Count = 0 Then
                 Return New NormalResponse(False, "没有任何数据", sql, "")
             End If
-            Dim workMsg As String = "行数:" & dt.Rows.Count & ",用时:" & GetTimeSpam(workStartTime) & ",  apiVersion:" & apiVersion
+            Dim workMsg As String = "行数:" & dt.Rows.Count & ",用时:" & GetTimeSpan(workStartTime) & ",  apiVersion:" & apiVersion
             'dt.Columns(3).ColumnName = "lon"
             'dt.Columns(4).ColumnName = "lat"
             'UEGDlon, UEGDlat, RSRP, SINR, grid
@@ -2540,7 +2550,7 @@ Public Class HTTPHandle
                 Return New NormalResponse(False, "HandleXMLfile result is null")
             End If
             If np.result Then
-                Return New NormalResponse(True, "录入成功，总用时:" & GetTimeSpam(startTime), np.errmsg, "")
+                Return New NormalResponse(True, "录入成功，总用时:" & GetTimeSpan(startTime), np.errmsg, "")
             Else
                 Return np
             End If
@@ -2646,7 +2656,7 @@ Public Class HTTPHandle
         Dim result2 As String = ORALocalhost.SqlCMDListQuickByPara("up_mmmrTable", dt)
         dt = Nothing
         If result2 = "success" Then
-            Return New NormalResponse(True, "", "行数:" & rowCount & ",入库用时:" & GetTimeSpam(startTimeTmp), "")
+            Return New NormalResponse(True, "", "行数:" & rowCount & ",入库用时:" & GetTimeSpan(startTimeTmp), "")
         Else
             Return New NormalResponse(False, result2)
         End If
@@ -2692,7 +2702,7 @@ Public Class HTTPHandle
             result = result2
             If result = "success" Then
                 Return New NormalResponse(True, result, "", "行数:" & dt.Rows.Count)
-                '  Return New NormalResponse(True, result, "", "行数:" & dt.Rows.Count & ",用时:" & GetTimeSpam(startTime))
+                '  Return New NormalResponse(True, result, "", "行数:" & dt.Rows.Count & ",用时:" & GetTimeSpan(startTime))
             Else
                 Return New NormalResponse(False, result, "错误:数据库录入失败", "")
             End If
@@ -2736,7 +2746,7 @@ Public Class HTTPHandle
             Dim result As String = result2
             If result = "success" Then
                 ' Return New NormalResponse(True, result, "", "行数:" & dt.Rows.Count)
-                Return New NormalResponse(True, result, "", "行数:" & dt.Rows.Count & ",用时:" & GetTimeSpam(startTime))
+                Return New NormalResponse(True, result, "", "行数:" & dt.Rows.Count & ",用时:" & GetTimeSpan(startTime))
             Else
                 Return New NormalResponse(False, result, "错误:数据库录入失败", "")
             End If
@@ -2869,7 +2879,7 @@ Public Class HTTPHandle
         Return Math.Round(s * 1000, 2)
     End Function
     '计算耗时
-    Private Function GetTimeSpam(ByVal t As Date) As String
+    Private Function GetTimeSpan(ByVal t As Date) As String
         Dim endTime As Date = Now
         Dim ts As TimeSpan = endTime - t
         Dim str As String = ts.Hours.ToString("00") & ":" & ts.Minutes.ToString("00") & ":" & ts.Seconds.ToString("00") & "." & ts.Milliseconds.ToString("000")
@@ -2913,7 +2923,7 @@ Public Class HTTPHandle
             For i = 0 To 6
                 dayList.Add(n.AddDays(-1 * i).ToString("yyyy-MM-dd"))
             Next
-            sb.AppendLine("查询最近7天时间列表:" & GetTimeSpam(workStartTime))
+            sb.AppendLine("查询最近7天时间列表:" & GetTimeSpan(workStartTime))
             workStartTime = Now
             sql = "select day from indexPageTable"
             Dim dayDt As DataTable = ORALocalhost.SqlGetDT(sql)
@@ -2930,7 +2940,7 @@ Public Class HTTPHandle
                     End If
                 Next
             End If
-            sb.AppendLine("比对历史时间列表:" & GetTimeSpam(workStartTime))
+            sb.AppendLine("比对历史时间列表:" & GetTimeSpan(workStartTime))
             workStartTime = Now
             Dim resultDt As New DataTable
             resultDt.Columns.Add("时间")
@@ -2973,7 +2983,7 @@ Public Class HTTPHandle
                     End If
                 End If
             Next
-            sb.AppendLine("复制历史时间数据:" & GetTimeSpam(workStartTime))
+            sb.AppendLine("复制历史时间数据:" & GetTimeSpan(workStartTime))
             workStartTime = Now
             For Each itm In dayList
                 Dim row As DataRow = resultDt.NewRow
@@ -3117,7 +3127,7 @@ Public Class HTTPHandle
                 End If
                 resultDt.Rows.Add(row)
             Next
-            sb.AppendLine("计算新时间数据:" & GetTimeSpam(workStartTime))
+            sb.AppendLine("计算新时间数据:" & GetTimeSpan(workStartTime))
             workStartTime = Now
             Dim cols() As String = GetOraTableColumns("indexPageTable")
             Dim pageDt As New DataTable
@@ -3174,11 +3184,11 @@ Public Class HTTPHandle
                 ORALocalhost.SqlCMD(sql)
                 ORALocalhost.SqlCMDListQuickByPara("indexPageTable", pageDt)
             End If
-            sb.AppendLine("修改历史新时间数据:" & GetTimeSpam(workStartTime))
+            sb.AppendLine("修改历史新时间数据:" & GetTimeSpan(workStartTime))
             workStartTime = Now
             resultDt.DefaultView.Sort = "时间 desc"
             resultDt = resultDt.DefaultView.ToTable()
-            sb.AppendLine("排序:" & GetTimeSpam(workStartTime))
+            sb.AppendLine("排序:" & GetTimeSpan(workStartTime))
             workStartTime = Now
             Return New NormalResponse(True, "version=1.0 计算量 dayList.length=" & dayList.Count, sb.ToString, resultDt)
         Catch ex As Exception
@@ -3395,10 +3405,55 @@ Public Class HTTPHandle
             Dim carrier As String = GetCarrierFromIp(ip)
             Dim url As String = "http://221.238.40.153:7062/video/720P_30s_DY__clip1.mp4"
             url = "http://221.238.40.153:7062/video/720P_30s_DY__clip215.mp4"
+            Dim sql As String = "select url,filesize,VIDEOSECOND from QOE_VIDEO_SOURCE WHERE FILESIZEM>2 and  FILESIZEM<3 "
+            sql = OracleSelectPage(sql, 0, 1)
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) = False Then
+                If dt.Rows.Count > 0 Then
+                    Dim row As DataRow = dt.Rows(0)
+                    url = row("url".ToUpper).ToString
+                End If
+            End If
             If carrier = "移动" Then
                 url = url.Replace("221.238.40.153:7062", "111.53.74.132")
             End If
             Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, url)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    Structure OneKeyTestUrlInfo
+        Dim url As String
+        Dim filesize As Long
+        Dim videoSecond As Integer
+    End Structure
+    '获取新版本,UniQoE V1.4.9以上一键测试地址
+    Public Function Handle_GetNewVersionOneKeyTestUrl(context As HttpContext) As NormalResponse
+        Try
+            Dim ip As String = context.Request.UserHostAddress
+            Dim carrier As String = GetCarrierFromIp(ip)
+            Dim url As String = "http://221.238.40.153:7062/video/720P_30s_DY__clip1.mp4"
+            url = "http://221.238.40.153:7062/video/720P_30s_DY__clip215.mp4"
+            Dim info As New OneKeyTestUrlInfo
+            info.url = url
+            info.filesize = 2410306
+            info.videoSecond = 30
+            Dim sql As String = "select url,filesize,VIDEOSECOND from QOE_VIDEO_SOURCE WHERE FILESIZEM>2 and  FILESIZEM<3 "
+            sql = OracleSelectPage(sql, 0, 1)
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) = False Then
+                If dt.Rows.Count > 0 Then
+                    Dim row As DataRow = dt.Rows(0)
+                    url = row("url".ToUpper).ToString()
+                    info.filesize = Val(row("filesize".ToString).ToString())
+                    info.videoSecond = Val(row("VIDEOSECOND".ToString).ToString())
+                End If
+            End If
+            If carrier = "移动" Then
+                url = url.Replace("221.238.40.153:7062", "111.53.74.132")
+            End If
+            info.url = url
+            Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, info)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try

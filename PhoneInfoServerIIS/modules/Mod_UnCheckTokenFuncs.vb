@@ -57,6 +57,7 @@
 "UploadOneKeyTestInfo",
 "GetNewQoEVideoInfo",
 "GetOneKeyTestHisIdList",
-"GetOneKeyTestHisData"
+"GetOneKeyTestHisData",
+"GetNewVersionOneKeyTestUrl"
        }
 End Module

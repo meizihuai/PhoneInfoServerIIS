@@ -39,7 +39,8 @@
           //  UpdateDtGroup();
            // AddMission();
           //  GetOnlineMission();
-            GetAllMission();
+          //  GetAllMission();
+            GetUeQoeReportRSRPPoint();
         }
          //获取正在执行的测试任务
         function GetOnlineMission() {
@@ -505,14 +506,15 @@
             log("获取GetUeQoeReportRSRPPoint数据点...");
             var d = {
                 func: "GetUeQoeReportRSRPPoint",
-                carrier: "中国移动",
-                imei: "868375023586891",
+                carrier: "",
+                imei: "866831047103446",
                 netType: "",
                 grid: "",
-                startTime: "2019-01-02",
-                endTime: "2019-01-03",
+                startTime: "2019-03-20 00:00:00",
+                endTime: "2019-03-20 14:42:47",
                 readIndex: 0,
-                readCount: 100
+                readCount: 100,
+                token:""
             }
             $.get(u, d, function (data) {
                 log("GetUeQoeReportRSRPPoint:" + data);
