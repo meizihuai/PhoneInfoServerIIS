@@ -146,7 +146,9 @@
     </Compile>
     <Compile Include="class\AppMission.vb" />
     <Compile Include="class\IPLocationHelper.vb" />
+    <Compile Include="class\LogHelper.vb" />
     <Compile Include="class\OneKeyTestInfo.vb" />
+    <Compile Include="class\QoEVideoDtGroup.vb" />
     <Compile Include="default.ashx.vb">
       <DependentUpon>default.ashx</DependentUpon>
     </Compile>
@@ -211,6 +213,7 @@
     </None>
     <None Include="My Project\PublishProfiles\CustomProfile.pubxml" />
     <None Include="My Project\PublishProfiles\FolderProfile.pubxml" />
+    <None Include="My Project\PublishProfiles\WebDeploySetting.pubxml" />
     <None Include="My Project\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <CustomToolNamespace>My</CustomToolNamespace>

@@ -10,9 +10,11 @@
     Public VIDEO_LOAD_SCORE As Integer    '初始加载评分
     Public VIDEO_STALL_SCORE As Integer    '卡顿评分
     Public VIDEO_BUFFER_TOTAL_SCORE As Integer    '缓冲时延评分
-    Public USER_SCORE As Integer    '用户分值
-    Public VMOS As Integer    'VMOS
+    Public USER_SCORE As Integer    'old清晰度  已弃用
+    Public VMOS As Single    'VMOS
+    Public VMOS_MATCH As Double  '自动打分和手动打分的契合度
     Public PACKET_LOSS As Long    '丢包数
+    Public ECLATIRY As Integer '清晰度
     Public ELOAD As Integer    '/*用户对视频播放等待时间的评分(5：无法察觉到缓冲，4：缓冲时间很短，3：缓冲时间长度一般，2：缓冲时间较长，1：缓冲时间过长无法容忍)*/
     Public ESTALL As Integer    '/*用户对流畅度的评分(5:毫无卡顿，4：略有卡顿但不影响观看，3：有卡顿对观看造成一定影响，2：有卡顿对观看造成较大影响，1：卡顿过多无法容忍)*/
     Public EVMOS As Integer    '/*用户对整体视频服务的综合评分(5:非常好，4：良好，3：一般，2：较差，1：无法容忍)*/
@@ -43,8 +45,13 @@
     Public PHONE_ELECTRIC_END As Integer    '/*播放结束时的手机电量百分比*/
     Public SCREEN_RESOLUTION_LONG As Integer    '/*屏幕分辨率(长)*/
     Public SCREEN_RESOLUTION_WIDTH As Integer    '/*屏幕分辨率(宽)*/
+
     Public LIGHT_INTENSITY As Integer    '/*手机环境光照强度*/
     Public PHONE_SCREEN_BRIGHTNESS As Integer    '/*手机屏幕亮度*/
+    Public LIGHT_INTENSITY_list As List(Of Integer)
+    Public PHONE_SCREEN_BRIGHTNESS_list As List(Of Integer)
+
+
     Public HTTP_RESPONSE_TIME As Long    'http响应时间
     Public PING_AVG_RTT As Long    '/*Ping
     Public VIDEO_CLARITY As String    '视频清晰度
@@ -72,7 +79,8 @@
     Public SIGNALList As List(Of String)   '信号汇总信息（按GPS的5个时间点来取）
     Public ADJList As List(Of ADJInfo)   '邻区ECELLID
     Public STALLlist As List(Of STALLInfo)    '卡顿信息
-    Public ACCMIN As Integer    '最小接入电平
+    Public ACCMIN As Integer    '最小接入电平   //已弃用 V1.5.5B4
+    Public NETWORK_TYPEList As List(Of String)
     Public USERSCENE As String    '/*用户场景*/
     Public MOVE_SPEED As Long    '手机移动速度
     Public ISPLAYCOMPLETED As Integer    '是否播放完成
@@ -120,7 +128,14 @@
         Public RSRP As Double
     End Class
     Public Class STALLInfo
-        Public POINT As Integer
-        Public TIME As Integer
+        Public POINT As Long
+        Public TIME As Long
+        Sub New()
+
+        End Sub
+        Sub New(point As Long, time As Long)
+            Me.POINT = point
+            Me.TIME = time
+        End Sub
     End Class
 End Class

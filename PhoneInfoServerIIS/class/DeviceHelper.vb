@@ -23,16 +23,53 @@ Imports System.Reflection
 Imports System.IO.Compression
 
 Public Class DeviceHelper
+
+    Public Shared Function HandleImeiAndUid(imsi As String, Optional imei As String = "") As String
+        If imsi = "" Then Return ""
+        Dim txt As String = ORALocalhost.SQLInfo("select aid from deviceTable where imsi='" & imsi & "'")
+        If IsNothing(txt) = False Then
+            If txt <> "" Then
+                Return txt
+            End If
+        End If
+        If imei <> "" Then
+            txt = ORALocalhost.SQLInfo("select aid from deviceTable where imei='" & imei & "'")
+            If IsNothing(txt) = False Then
+                If txt <> "" Then
+                    Return txt
+                End If
+            End If
+        End If
+        Dim aid As String = GetNewAid()
+        Dim sql As String = "update deviceTable set aid='" & aid & "' where imsi='" & imsi & "'"
+        ORALocalhost.SqlCMD(sql)
+        Dim oracleImsi As String = "select imsi from deviceTable where aid='" & aid & "'"
+        If oracleImsi = imsi Then
+            Return aid
+        End If
+        If imei <> "" Then
+            sql = "update deviceTable set aid='" & aid & "' where imei='" & imei & "'"
+            ORALocalhost.SqlCMD(sql)
+        End If
+        Return aid
+    End Function
     Public Shared Sub ChangeDeviceStatus(pi As PhoneInfo)
         If IsNothing(pi) Then Return
-        If IsNothing(pi.IMEI) Then Return
-        If pi.IMEI = "" Then Return
+        If IsNothing(pi.AID) Then
+            pi.AID = ""
+        End If
+        If pi.AID = "" Then
+            pi.AID = HandleImeiAndUid(pi.IMSI, pi.IMEI)
+        End If
+        If pi.AID = "" Then
+            Return
+        End If
         Dim time As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
-        Dim sql As String = "select * from deviceTable where imei='" & pi.IMEI & "'"
+        Dim sql As String = "select * from deviceTable where aid='" & pi.AID & "'"
         Dim isExist As Boolean = ORALocalhost.SqlIsIn(sql)
         If isExist Then
             sql = "update deviceTable set {0} GroupId='{1}',lastDateTime='{2}',isBusy='{3}',
-                  province='{4}',city='{5}',district='{6}',lon='{7}',lat='{8}',bdlon='{9}',bdlat='{10}',gdlon='{11}',gdlat='{12}',apkVersion='{13}' where imei='" & pi.IMEI & "'"
+                   province='{4}',city='{5}',district='{6}',lon='{7}',lat='{8}',bdlon='{9}',bdlat='{10}',gdlon='{11}',gdlat='{12}',apkVersion='{13}',imei='{14}',imsi='{15}' where aid='" & pi.AID & "'"
             Dim list As New List(Of String)
             list.Add("") 'userName
             list.Add("") 'groupId
@@ -48,11 +85,13 @@ Public Class DeviceHelper
             list.Add(pi.gdlon)
             list.Add(pi.gdlat)
             list.Add(pi.apkVersion)
+            list.Add(pi.IMEI)
+            list.Add(pi.IMSI)
             sql = String.Format(sql, list.ToArray())
             Dim result As String = ORALocalhost.SqlCMD(sql)
         Else
-            sql = "insert into deviceTable (DateTime,userName,imei,GroupId,lastDateTime,isBusy,province,city,district,lon,lat,bdlon,bdlat,gdlon,gdlat,power,PHONEMODEL,apkVersion) values ('{0}','{1}','{2}','{3}','{4}',
-                    '{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}')"
+            sql = "insert into deviceTable (DateTime,userName,imei,GroupId,lastDateTime,isBusy,province,city,district,lon,lat,bdlon,bdlat,gdlon,gdlat,power,PHONEMODEL,apkVersion,imsi,aid) values ('{0}','{1}','{2}','{3}','{4}',
+                    '{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}','{18}','{19}')"
             Dim list As New List(Of String)
             list.Add(time)
             list.Add("") 'userName
@@ -72,12 +111,23 @@ Public Class DeviceHelper
             list.Add(9) 'power
             list.Add(pi.phoneModel)
             list.Add(pi.apkVersion)
+            list.Add(pi.IMSI)
+            list.Add(GetNewAid())
             sql = String.Format(sql, list.ToArray())
             Dim result As String = ORALocalhost.SqlCMD(sql)
         End If
-
-
     End Sub
+    Private Shared Function GetNewAid() As String
+        While True
+            Dim aid As String = System.Guid.NewGuid().ToString("N").Substring(0, 6)
+            Dim sql As String = "select id from devicelog where aid='" & aid & "'"
+            If Regex.IsMatch(aid, "[A-Za-z].*[0-9]|[0-9].*[A-Za-z]") Then
+                If ORALocalhost.SqlIsIn(sql) = False Then
+                    Return aid
+                End If
+            End If
+        End While
+    End Function
     Public Shared Function AddMission(am As AppMission) As NormalResponse
         Dim id As String = am.id
         Dim dateTime As String = am.dateTime

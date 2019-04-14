@@ -123,78 +123,6 @@ Public Class HTTPHandle
         End Sub
     End Structure
 
-    Structure VLCTestInfo '旧版视频测试信息  已弃用
-        Dim ID As Integer
-        Dim Time As String
-        Dim BusinessType As String
-        Dim Video_BUFFER_INIT_TIME As Long
-        Dim Video_BUFFER_TOTAL_TIME As Long
-        Dim Video_Stall_Num As Integer
-        Dim Video_Stall_TOTAL_TIME As Long
-        Dim Video_Stall_Duration_Proportion As Single
-        Dim Video_LOAD_Score As Single
-        Dim Video_STALL_Score As Single
-        Dim USER_Score As Single
-        Dim VMOS As Single
-        Dim Packet_loss As Long
-        Dim CARRIER As String
-        Dim PLMN As String
-        Dim MCC As String
-        Dim MNC As String
-        Dim tac As Long
-        Dim enodebid As Long
-        Dim cellid As Long
-        Dim IMSI As String
-        Dim IMEI As String
-        Dim RSRP As String
-        Dim SINR As String
-        Dim phoneName As String
-        Dim phoneModel As String
-        Dim OS As String
-        Dim PHONE_ELECTRIC_START As Integer
-        Dim PHONE_ELECTRIC_END As Integer
-        Dim LON As Double
-        Dim LAT As Double
-
-        Dim accuracy As Double
-        Dim altitude As Double
-        Dim speed As Double
-        Dim satelliteCount As Integer
-
-        Dim LON_END As Single
-        Dim LAT_END As Single
-        Dim COUNTRY As String
-        Dim PROVINCE As String
-        Dim CITY As String
-        Dim ADDRESS As String
-        Dim netType As String
-        Dim SCREEN_RESOLUTION_LONG As Long
-        Dim SCREEN_RESOLUTION_WIDTH As Long
-        Dim VIDEO_CLARITY As String
-        Dim VIDEO_CODING_FORMAT As String
-        Dim VIDEO_BITRATE As Long
-        Dim FPS As Integer
-        Dim VIDEO_TOTAL_TIME As Long
-        Dim VIDEO_PLAY_TOTAL_TIME As Long
-        Dim preparedTime As Long
-        Dim BVRate As Single
-        Dim STARTTIME As String
-        Dim file_Len As Long
-        Dim File_NAME As String
-        Dim LIGHT_INTENSITY As Long
-        Dim PHONE_SCREEN_BRIGHTNESS As Long
-        Dim SIGNAL_Info As String
-        Dim ENVIRONMENTAL_NOISE As String
-        Dim Called_Num As Long
-        Dim PING_AVG_RTT As Long
-        Dim ACCELEROMETER_DATA As Long
-        Dim INSTAN_DOWNLOAD_SPEED As Long
-        Dim VIDEO_SERVER_IP As String
-        Dim UE_INTERNAL_IP As String
-        Dim MOVE_SPEED As Single
-        Dim apkVersion As String
-        Dim apkName As String
-    End Structure
 
     ''设置web.config  System.Web.Configuration.WebConfigurationManager.AppSettings.Set("name", "name2");
     ''读取web.config  string name = System.Web.Configuration.WebConfigurationManager.AppSettings["name"];
@@ -369,20 +297,20 @@ Public Class HTTPHandle
             Dim Cond As String = "", sql As String
 
             Stepp = 2
-            If province <> "" Then Cond = " province='" & province & "'"
-            If city <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " city ='" & city & "'"
-            If line <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " line ='" & line & "'"
-            If name_cm <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_cm ='" & name_cm & "'"
-            If imei_cm <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_cm ='" & imei_cm & "'"
-            If phone_cm <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_cm ='" & phone_cm & "'"
+            If province <> "" Or True Then Cond = " province='" & province & "'"
+            If city <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " city ='" & city & "'"
+            If line <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " line ='" & line & "'"
+            If name_cm <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_cm ='" & name_cm & "'"
+            If imei_cm <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_cm ='" & imei_cm & "'"
+            If phone_cm <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_cm ='" & phone_cm & "'"
 
-            If name_cu <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_cu ='" & name_cu & "'"
-            If imei_cu <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_cu ='" & imei_cu & "'"
-            If phone_cu <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_cu ='" & phone_cu & "'"
+            If name_cu <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_cu ='" & name_cu & "'"
+            If imei_cu <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_cu ='" & imei_cu & "'"
+            If phone_cu <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_cu ='" & phone_cu & "'"
 
-            If name_ct <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_ct ='" & name_ct & "'"
-            If imei_ct <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_ct ='" & imei_ct & "'"
-            If phone_ct <> "" Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_ct ='" & phone_ct & "'"
+            If name_ct <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " name_ct ='" & name_ct & "'"
+            If imei_ct <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " imei_ct ='" & imei_ct & "'"
+            If phone_ct <> "" Or True Then Cond = Cond & IIf(Cond = "", "", " , ") & " phone_ct ='" & phone_ct & "'"
 
             If Cond.Length = 0 Then
                 Return New NormalResponse(False, "更新条件为空", groupId, "")
@@ -649,6 +577,7 @@ Public Class HTTPHandle
             '离线数据
             pi.ISUPLOADDATATIMELY = 0
             If pi.DATETIME = "" Then pi.DATETIME = Now.ToString("yyyy-MM-dd HH:mm:ss")
+
         Else
             '实时数据
             pi.ISUPLOADDATATIMELY = 1
@@ -761,6 +690,14 @@ Public Class HTTPHandle
         row("EARFCN".ToUpper) = pi.EARFCN
         row("PHONE_ELECTRIC".ToUpper) = pi.PHONE_ELECTRIC
 
+        If pi.HTTP_URL <> "" Then
+            pi.VMOS = GetQoEHttpResponseScore(pi.HTTP_RESPONSE_TIME)
+        End If
+        row("VMOS") = pi.VMOS
+        row("HTTP_RESPONSE_TIME") = pi.HTTP_RESPONSE_TIME
+        row("HTTP_URL") = pi.HTTP_URL
+        row("HTTP_BUFFERSIZE") = pi.HTTP_BUFFERSIZE
+
 
         If IsNothing(pi.neighbourList) = False Then
             Dim nb As List(Of Neighbour) = pi.neighbourList
@@ -819,6 +756,7 @@ Public Class HTTPHandle
         End Try
     End Function
     Private Function InsertQoEVideoInfoToOracle(qoe As QoEVideoInfo) As NormalResponse 'Android 上传QoEVideo数据处理和入库
+        If qoe.VIDEO_BUFFER_TOTAL_TIME = 0 Then Return New NormalResponse(False, "数据采集有问题，VIDEO_BUFFER_TOTAL_TIME=0")
         Dim columns() As String = GetOraTableColumns("Qoe_Video_TABLE")
         If IsNothing(columns) Then Return New NormalResponse(False, "数据表不存在")
         If columns.Count = 0 Then Return New NormalResponse(False, "数据表不存在")
@@ -847,13 +785,12 @@ Public Class HTTPHandle
         row("BUSINESS_TYPE".ToUpper) = qoe.BUSINESS_TYPE
         row("VIDEO_BUFFER_INIT_TIME".ToUpper) = qoe.VIDEO_BUFFER_INIT_TIME
         row("VIDEO_BUFFER_TOTAL_TIME".ToUpper) = qoe.VIDEO_BUFFER_TOTAL_TIME
-        row("VIDEO_STALL_NUM".ToUpper) = qoe.VIDEO_STALL_NUM
-        row("VIDEO_STALL_TOTAL_TIME".ToUpper) = qoe.VIDEO_STALL_TOTAL_TIME
-        row("VIDEO_STALL_DURATION_PROPORTION".ToUpper) = qoe.VIDEO_STALL_DURATION_PROPORTION
+
         row("VIDEO_LOAD_SCORE".ToUpper) = qoe.VIDEO_LOAD_SCORE
         row("VIDEO_STALL_SCORE".ToUpper) = qoe.VIDEO_STALL_SCORE
         row("VIDEO_BUFFER_TOTAL_SCORE".ToUpper) = qoe.VIDEO_BUFFER_TOTAL_SCORE
-        row("USER_SCORE".ToUpper) = qoe.USER_SCORE
+        ' row("USER_SCORE".ToUpper) = qoe.USER_SCORE
+        row("ECLATIRY".ToUpper) = qoe.ECLATIRY
         row("VMOS".ToUpper) = qoe.VMOS
         row("PACKET_LOSS".ToUpper) = qoe.PACKET_LOSS
         row("ELOAD".ToUpper) = qoe.ELOAD
@@ -871,7 +808,7 @@ Public Class HTTPHandle
         row("CELLID".ToUpper) = qoe.CELLID
         row("SIGNAL_STRENGTH".ToUpper) = qoe.SIGNAL_STRENGTH
 
-        row("SINR".ToUpper) = qoe.SINR
+        row("SINR".ToUpper) = qoe.pi.SINR
         row("PHONE_MODEL".ToUpper) = qoe.PHONE_MODEL
         row("OPERATING_SYSTEM".ToUpper) = qoe.OPERATING_SYSTEM
         row("UDID".ToUpper) = qoe.UDID
@@ -881,71 +818,111 @@ Public Class HTTPHandle
         row("PHONE_PLACE_STATE".ToUpper) = qoe.PHONE_PLACE_STATE
         row("COUNTRY".ToUpper) = qoe.COUNTRY
         row("PROVINCE".ToUpper) = qoe.PROVINCE
+        If qoe.CITY = "" Then
+            Try
+                Dim dtGroupId As String = QoEVideoDtGroupMember.GetGroupIdByImsi(qoe.IMSI)
+                Dim qoeDtGroup As QoEVideoDtGroup = QoEVideoDtGroup.Get(0, "groupId='" & dtGroupId & "'")
+                If IsNothing(qoeDtGroup) = False Then
+                    qoe.CITY = qoeDtGroup.city
+                End If
+            Catch ex As Exception
+
+            End Try
+        End If
         row("CITY".ToUpper) = qoe.CITY
         row("ADDRESS".ToUpper) = qoe.ADDRESS
         row("PHONE_ELECTRIC_START".ToUpper) = qoe.PHONE_ELECTRIC_START
         row("PHONE_ELECTRIC_END".ToUpper) = qoe.PHONE_ELECTRIC_END
         row("SCREEN_RESOLUTION_LONG".ToUpper) = qoe.SCREEN_RESOLUTION_LONG
         row("SCREEN_RESOLUTION_WIDTH".ToUpper) = qoe.SCREEN_RESOLUTION_WIDTH
-        row("LIGHT_INTENSITY".ToUpper) = qoe.LIGHT_INTENSITY
-        row("PHONE_SCREEN_BRIGHTNESS".ToUpper) = qoe.PHONE_SCREEN_BRIGHTNESS
+        Dim LIGHT_INTENSITY As String = ""
+        If IsNothing(qoe.LIGHT_INTENSITY_list) = False Then
+            LIGHT_INTENSITY = JsonConvert.SerializeObject(qoe.LIGHT_INTENSITY_list)
+        End If
+        row("LIGHT_INTENSITY".ToUpper) = LIGHT_INTENSITY
+        Dim PHONE_SCREEN_BRIGHTNESS As String = ""
+        If IsNothing(qoe.PHONE_SCREEN_BRIGHTNESS_list) = False Then
+            PHONE_SCREEN_BRIGHTNESS = JsonConvert.SerializeObject(qoe.PHONE_SCREEN_BRIGHTNESS_list)
+        End If
+        row("PHONE_SCREEN_BRIGHTNESS".ToUpper) = PHONE_SCREEN_BRIGHTNESS
         row("HTTP_RESPONSE_TIME".ToUpper) = qoe.HTTP_RESPONSE_TIME
         row("PING_AVG_RTT".ToUpper) = qoe.PING_AVG_RTT
+        qoe.VIDEO_CLARITY = ORALocalhost.SQLInfo("select VIDEO_CLARITY from QOE_VIDEO_SOURCE where url='" & qoe.FILE_NAME & "'")
+        qoe.VIDEO_CLARITY = qoe.VIDEO_CLARITY.Replace("P", "").Replace("p", "")
         row("VIDEO_CLARITY".ToUpper) = qoe.VIDEO_CLARITY
+        If qoe.VIDEO_CODING_FORMAT = "" Then qoe.VIDEO_CODING_FORMAT = "H.264"
         row("VIDEO_CODING_FORMAT".ToUpper) = qoe.VIDEO_CODING_FORMAT
         row("VIDEO_BITRATE".ToUpper) = qoe.VIDEO_BITRATE
         row("FPS".ToUpper) = qoe.FPS
         row("VIDEO_TOTAL_TIME".ToUpper) = qoe.VIDEO_TOTAL_TIME
+        If qoe.VIDEO_PLAY_TOTAL_TIME = 0 Then qoe.VIDEO_PLAY_TOTAL_TIME = qoe.VIDEO_STALL_TOTAL_TIME + qoe.VIDEO_TOTAL_TIME
         row("VIDEO_PLAY_TOTAL_TIME".ToUpper) = qoe.VIDEO_PLAY_TOTAL_TIME
-        row("VIDEO_PEAK_DOWNLOAD_SPEED".ToUpper) = qoe.VIDEO_PEAK_DOWNLOAD_SPEED
+        row("ISGPSOPEN".ToUpper) = qoe.pi.isGPSOpen
+
+
         row("APP_PREPARED_TIME".ToUpper) = qoe.APP_PREPARED_TIME
         row("BVRATE".ToUpper) = qoe.BVRATE
         row("STARTTIME".ToUpper) = qoe.STARTTIME
         row("FILE_SIZE".ToUpper) = qoe.FILE_SIZE
         row("FILE_NAME".ToUpper) = qoe.FILE_NAME
+        If qoe.FILE_SERVER_LOCATION = "" Then
+            If qoe.FILE_SERVER_IP.StartsWith("221") Then
+                qoe.FILE_SERVER_LOCATION = "研究院221服务器"
+            Else
+                qoe.FILE_SERVER_LOCATION = "移动111服务器"
+            End If
+        End If
         row("FILE_SERVER_LOCATION".ToUpper) = qoe.FILE_SERVER_LOCATION
         row("FILE_SERVER_IP".ToUpper) = qoe.FILE_SERVER_IP
         row("UE_INTERNAL_IP".ToUpper) = qoe.UE_INTERNAL_IP
         row("ENVIRONMENTAL_NOISE".ToUpper) = qoe.ENVIRONMENTAL_NOISE
+        qoe.VIDEO_AVERAGE_PEAK_RATE = qoe.VIDEO_AVERAGE_PEAK_RATE * 8
         row("VIDEO_AVERAGE_PEAK_RATE".ToUpper) = qoe.VIDEO_AVERAGE_PEAK_RATE
         If IsNothing(qoe.CELL_SIGNAL_STRENGTHList) = False Then
-            Dim recordValue As Integer
-            For i = 0 To qoe.CELL_SIGNAL_STRENGTHList.Count - 1
-                If qoe.CELL_SIGNAL_STRENGTHList(i) <> 0 Then
-                    recordValue = qoe.CELL_SIGNAL_STRENGTHList(i)
-                Else
-                    qoe.CELL_SIGNAL_STRENGTHList(i) = recordValue
-                End If
-            Next
+            'Dim recordValue As Integer
+            'For i = 0 To qoe.CELL_SIGNAL_STRENGTHList.Count - 1
+            '    If qoe.CELL_SIGNAL_STRENGTHList(i) <> 0 Then
+            '        recordValue = qoe.CELL_SIGNAL_STRENGTHList(i)
+            '    Else
+            '        qoe.CELL_SIGNAL_STRENGTHList(i) = recordValue
+            '    End If
+            'Next
             row("CELL_SIGNAL_STRENGTH".ToUpper) = JsonConvert.SerializeObject(qoe.CELL_SIGNAL_STRENGTHList)
         End If
         If IsNothing(qoe.ACCELEROMETER_DATAList) = False Then
             row("ACCELEROMETER_DATA".ToUpper) = JsonConvert.SerializeObject(qoe.ACCELEROMETER_DATAList)
         End If
         If IsNothing(qoe.INSTAN_DOWNLOAD_SPEEDList) = False Then
+            For i = 0 To qoe.INSTAN_DOWNLOAD_SPEEDList.Count - 1
+                qoe.INSTAN_DOWNLOAD_SPEEDList(i) = qoe.INSTAN_DOWNLOAD_SPEEDList(i) * 10 * 8
+            Next
+            row("INSTAN_DOWNLOAD_SPEED".ToUpper) = JsonConvert.SerializeObject(qoe.INSTAN_DOWNLOAD_SPEEDList)
+        End If
+        Dim isNeedSetPeakSpeed As Boolean = False
+        If qoe.VIDEO_PEAK_DOWNLOAD_SPEED = 0 Then
+            isNeedSetPeakSpeed = True
+        Else
+            qoe.VIDEO_PEAK_DOWNLOAD_SPEED = qoe.VIDEO_PEAK_DOWNLOAD_SPEED * 8
+        End If
+        Dim Video_All_Peak_Speed As Long = 0
+        If IsNothing(qoe.INSTAN_DOWNLOAD_SPEEDList) = False Then
             Dim recordValue As Long
             For i = 0 To qoe.INSTAN_DOWNLOAD_SPEEDList.Count - 1
                 If qoe.INSTAN_DOWNLOAD_SPEEDList(i) <> 0 Then
                     recordValue = qoe.INSTAN_DOWNLOAD_SPEEDList(i)
-                Else
-                    qoe.INSTAN_DOWNLOAD_SPEEDList(i) = recordValue
+                End If
+                If recordValue > Video_All_Peak_Speed Then
+                    Video_All_Peak_Speed = recordValue
+                End If
+                If isNeedSetPeakSpeed Then
+                    If recordValue > qoe.VIDEO_PEAK_DOWNLOAD_SPEED Then
+                        qoe.VIDEO_PEAK_DOWNLOAD_SPEED = recordValue
+                    End If
                 End If
             Next
-            row("INSTAN_DOWNLOAD_SPEED".ToUpper) = JsonConvert.SerializeObject(qoe.INSTAN_DOWNLOAD_SPEEDList)
         End If
-        If IsNothing(qoe.VIDEO_ALL_PEAK_RATEList) = False Then
-            Dim recordValue As Long
-            For i = 0 To qoe.VIDEO_ALL_PEAK_RATEList.Count - 1
-                If qoe.VIDEO_ALL_PEAK_RATEList(i) <> 0 Then
-                    recordValue = qoe.VIDEO_ALL_PEAK_RATEList(i)
-                Else
-                    qoe.VIDEO_ALL_PEAK_RATEList(i) = recordValue
-                End If
-            Next
-            row("VIDEO_ALL_PEAK_RATE".ToUpper) = JsonConvert.SerializeObject(qoe.VIDEO_ALL_PEAK_RATEList)
-        End If
-
-
+        row("VIDEO_ALL_PEAK_RATE".ToUpper) = Video_All_Peak_Speed
+        row("VIDEO_PEAK_DOWNLOAD_SPEED".ToUpper) = qoe.VIDEO_PEAK_DOWNLOAD_SPEED
         If IsNothing(qoe.GPSPointList) = False Then
             Dim recordValue As New QoEVideoInfo.GPSPoint
             recordValue.LONGITUDE = 0
@@ -981,6 +958,25 @@ Public Class HTTPHandle
         '        row(("ADJ_RSRP" & i + 1).ToUpper) = recordValue.RSRP
         '    Next
         'End If
+
+        If qoe.VIDEO_STALL_NUM > 0 Then
+            If qoe.VIDEO_STALL_TOTAL_TIME = 0 Then qoe.VIDEO_STALL_TOTAL_TIME = 1000
+        End If
+        If IsNothing(qoe.STALLlist) Then
+            qoe.STALLlist = New List(Of QoEVideoInfo.STALLInfo)
+        End If
+        If qoe.STALLlist.Count < qoe.VIDEO_STALL_NUM Then
+            Dim totalStallTime As Long = qoe.VIDEO_STALL_TOTAL_TIME
+            Dim d As Double = totalStallTime / qoe.VIDEO_STALL_NUM
+            Dim perTotalTime As Long = d
+            Dim point As Long = 0
+            For i = qoe.STALLlist.Count To qoe.VIDEO_STALL_NUM - 1
+
+                qoe.STALLlist.Add(New QoEVideoInfo.STALLInfo(point, perTotalTime))
+                point = point + perTotalTime
+            Next
+        End If
+
         If IsNothing(qoe.STALLlist) = False Then
             Dim recordValue As New QoEVideoInfo.STALLInfo
             recordValue.TIME = 0
@@ -988,14 +984,23 @@ Public Class HTTPHandle
             For i = 0 To 9
                 If qoe.STALLlist.Count > i Then
                     recordValue = qoe.STALLlist(i)
+                Else
+                    recordValue.TIME = 0
+                    recordValue.POINT = 0
                 End If
                 row(("STALL_DURATION_LONG_" & i + 1).ToUpper) = recordValue.TIME
                 row(("STALL_DURATION_LONG_POINT_" & i + 1).ToUpper) = recordValue.POINT
             Next
         End If
+        row("VIDEO_STALL_NUM".ToUpper) = qoe.VIDEO_STALL_NUM
+        row("VIDEO_STALL_TOTAL_TIME".ToUpper) = qoe.VIDEO_STALL_TOTAL_TIME
+        Dim tmpdValue As Double = qoe.VIDEO_STALL_TOTAL_TIME / qoe.VIDEO_BUFFER_TOTAL_TIME
+        qoe.VIDEO_STALL_DURATION_PROPORTION = (tmpdValue * 100).ToString("0.00")
+        row("VIDEO_STALL_DURATION_PROPORTION".ToUpper) = qoe.VIDEO_STALL_DURATION_PROPORTION
+
         Dim pi As PhoneInfo = qoe.pi
         If IsNothing(pi) = False Then
-            row("PHONE_SCREEN_BRIGHTNESS".ToUpper) = pi.PHONE_SCREEN_BRIGHTNESS
+
             If IsNothing(pi.neighbourList) = False Then
                 If pi.neighbourList.Count > 0 Then
                     row("Adj_PCI1".ToUpper) = pi.neighbourList(0).PCI
@@ -1010,15 +1015,18 @@ Public Class HTTPHandle
                 End If
             End If
         End If
-
-        row("ACCMIN".ToUpper) = qoe.ACCMIN
+        Dim NETWORK_SET As String = ""
+        If IsNothing(qoe.NETWORK_TYPEList) = False Then NETWORK_SET = JsonConvert.SerializeObject(qoe.NETWORK_TYPEList)
+        row("NETWORK_SET".ToUpper) = NETWORK_SET
         row("USERSCENE".ToUpper) = qoe.USERSCENE
         row("MOVE_SPEED".ToUpper) = qoe.MOVE_SPEED
+        qoe.ISPLAYCOMPLETED = 1
         row("ISPLAYCOMPLETED".ToUpper) = qoe.ISPLAYCOMPLETED
         row("LOCALDATASAVETIME".ToUpper) = qoe.LOCALDATASAVETIME
         row("ISUPLOADDATATIMELY".ToUpper) = qoe.ISUPLOADDATATIMELY
         row("TASKNAME".ToUpper) = qoe.TASKNAME
-        row("RECFILE".ToUpper) = qoe.RECFILE
+        ' qoe.RECFILE = qoe.SCREENRECORD_FILENAME
+        ' row("RECFILE".ToUpper) = qoe.RECFILE
         row("APKVERSION".ToUpper) = qoe.APKVERSION
         row("SATELLITECOUNT".ToUpper) = qoe.SATELLITECOUNT
         row("ISOUTSIDE".ToUpper) = qoe.ISOUTSIDE
@@ -1029,10 +1037,23 @@ Public Class HTTPHandle
         row("GDLAT".ToUpper) = qoe.GDLAT
         row("ACCURACY".ToUpper) = qoe.ACCURACY
         row("ALTITUDE".ToUpper) = qoe.ALTITUDE
-        row("GPSSPEED".ToUpper) = qoe.GPSSPEED
-        row("BUSINESSTYPE".ToUpper) = qoe.BUSINESSTYPE
+        Dim vmos_match As Double = 0
+        If qoe.EVMOS <> 0 Then
+            vmos_match = 100 * （1 - (Math.Abs(qoe.EVMOS - qoe.VMOS) / 4)）
+        End If
+        qoe.VMOS_MATCH = vmos_match.ToString("0.00")
+        row("VMOS_MATCH".ToUpper) = qoe.VMOS_MATCH
+        'row("GPSSPEED".ToUpper) = qoe.GPSSPEED
+        'row("BUSINESSTYPE".ToUpper) = qoe.BUSINESSTYPE
+        row("PCI".ToUpper) = qoe.pi.PCI
         row("APKNAME".ToUpper) = qoe.APKNAME
         dt.Rows.Add(row)
+        Task.Run(Sub()
+                     HandleUserBonusPoints(qoe)
+                 End Sub)
+        Task.Run(Sub()
+                     QoEVideoDtGroupMember.OnUpdateQoEVideoInfo(qoe)
+                 End Sub)
         Dim result As String = ORALocalhost.SqlCMDListQuickByPara("Qoe_Video_TABLE", dt)
         If result = "success" Then
             Dim np As New NormalResponse(True, "success", "", "")
@@ -1044,13 +1065,128 @@ Public Class HTTPHandle
             Return np
         End If
     End Function
+    Private Sub HandleUserBonusPoints(qoe As QoEVideoInfo)
+        Try
 
+            Dim vmos As Integer, evmos As Integer, imsi As String, imei As String, url As String
+            vmos = qoe.VMOS
+            evmos = qoe.EVMOS
+            imsi = qoe.IMSI
+            imei = qoe.IMEI
+            url = qoe.FILE_NAME
+            ' If (vmos = 0 Or evmos = 0) Then Return
+            Dim bonusPoints As Single = 1
+            Dim rewordPoints As Single = 1 - (Math.Abs(evmos - vmos)) / 4
+            If (vmos = 0 Or evmos = 0) Then
+                rewordPoints = 0
+                bonusPoints = 0
+            End If
+            bonusPoints = bonusPoints + rewordPoints
+            ' File.WriteAllText("d:\user_bp_table.txt", String.Format("evmos={0},vmos={1},rewordPoints={2},bonusPoints={3}", evmos, vmos, rewordPoints, bonusPoints))
+            Dim time As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
+            Dim sql As String = "select * from user_bp_table where imsi='" & imsi & "'"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            Dim isNeedAdd As Boolean = True
+            If IsNothing(dt) = False Then
+                If dt.Rows.Count > 0 Then
+                    isNeedAdd = False
+                    Dim oldPoints As String = dt.Rows(0)("bonusPoints".ToUpper()).ToString()
+                    Dim videoUrls As String = dt.Rows(0)("videoUrls".ToUpper()).ToString()
+                    Dim qoe_total_time As String = dt.Rows(0)("qoe_total_time".ToUpper()).ToString()
+                    Dim qoe_total_E_time As String = dt.Rows(0)("qoe_total_E_time".ToUpper()).ToString()
+                    Dim qoe_today_time As String = dt.Rows(0)("qoe_today_time".ToUpper()).ToString()
+                    Dim qoe_today_E_time As String = dt.Rows(0)("qoe_today_E_time".ToUpper()).ToString()
+                    Dim lastDateTime As String = dt.Rows(0)("lastDateTime".ToUpper()).ToString()
+                    If IsNothing(qoe_total_time) = False AndAlso IsDBNull(qoe_total_time) = False Then
+                        qoe_total_time = Val(qoe_total_time) + 1
+                    Else
+                        qoe_total_time = 1
+                    End If
+                    If qoe.EVMOS > 0 Then
+                        If IsNothing(qoe_total_E_time) = False AndAlso IsDBNull(qoe_total_E_time) = False Then
+                            qoe_total_E_time = Val(qoe_total_E_time) + 1
+                        Else
+                            qoe_total_E_time = 1
+                        End If
+                    End If
+
+                    Dim isToday As Boolean = False
+                    If IsNothing(lastDateTime) = False AndAlso IsDBNull(lastDateTime) = False Then
+                        Dim lastDay As Date = Now
+                        Date.TryParse(lastDateTime, lastDay)
+                        If lastDay.ToString("yyyy-MM-dd") = Now.ToString("yyyy-MM-dd") Then
+                            isToday = True
+                        End If
+                    End If
+                    If isToday Then
+                        If IsNothing(qoe_today_time) = False AndAlso IsDBNull(qoe_today_time) = False Then
+                            qoe_today_time = Val(qoe_today_time) + 1
+                        Else
+                            qoe_today_time = 1
+                        End If
+                        If qoe.EVMOS > 0 Then
+                            If IsNothing(qoe_today_E_time) = False AndAlso IsDBNull(qoe_today_E_time) = False Then
+                                qoe_today_E_time = Val(qoe_today_E_time) + 1
+                            Else
+                                qoe_today_E_time = 1
+                            End If
+                        End If
+                    Else
+                        qoe_today_time = 1
+                        If qoe.EVMOS > 0 Then
+                            qoe_today_E_time = 1
+                        End If
+                    End If
+
+                    Dim videoList As List(Of String)
+                    Dim oldBp As Single = 0
+                    If IsNothing(oldPoints) = False AndAlso IsDBNull(oldPoints) = False Then
+                        oldBp = Val(oldPoints)
+                    End If
+                    If IsNothing(videoUrls) = False AndAlso IsDBNull(videoUrls) = False Then
+                        Try
+                            videoList = JsonConvert.DeserializeObject(Of List(Of String))(videoUrls)
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+                    If IsNothing(videoList) Then videoList = New List(Of String)
+                    videoList.Add(url)
+                    Dim lastBpoints As String = bonusPoints.ToString("0.0")
+                    bonusPoints = bonusPoints + oldBp
+                    Dim str As String = bonusPoints.ToString("0.0")
+                    sql = "update user_bp_table set lastDateTime='{0}',bonusPoints={1},imei='{2}',EVMOS={3},VMOS={4},LastBonusPoints={5},LastVideoUrl='{6}',VideoUrls='{7}',
+                           QOE_TOTAL_time={8},QOE_TOTAL_E_time={9},QOE_TODAY_time={10},QOE_TODAY_E_time={11},lastday='{12}'   where imsi='" & imsi & "'"
+                    videoUrls = JsonConvert.SerializeObject(videoList)
+                    videoUrls = ""
+                    sql = String.Format(sql, time, str, imei, evmos, vmos, lastBpoints, url, videoUrls,
+                                         qoe_total_time, qoe_total_E_time, qoe_today_time, qoe_today_E_time, time.Substring(0, 10))
+                End If
+            End If
+            If isNeedAdd Then
+                sql = "insert into user_bp_table(dateTime,imei,imsi,lastDateTime,bonusPoints,EVMOS,VMOS,LastBonusPoints,LastVideoUrl,VideoUrls,QOE_TOTAL_time,QOE_TOTAL_E_time,QOE_TODAY_time,QOE_TODAY_E_time,lastDay)
+                       values('{0}','{1}','{2}','{3}',{4},{5},{6},{7},'{8}','{9}','{10}','{11}','{12}','{13}','{14}')"
+                Dim str As String = bonusPoints.ToString("0.0")
+                Dim list As New List(Of String)
+                list.Add(url)
+                Dim videoUrls As String = JsonConvert.SerializeObject(list)
+                videoUrls = ""
+                sql = String.Format(sql, time, imei, imsi, time, str, evmos, vmos, str, url, videoUrls,
+                                    1, IIf(qoe.EVMOS > 0, 1, 0), 1, IIf(qoe.EVMOS > 0, 1, 0), time.Substring(0, 10))
+            End If
+            Dim result As String = ORALocalhost.SqlCMD(sql)
+            ' File.WriteAllText("d:\user_bp_table.txt", Now.ToString("yyyy-MM-dd HH:mm:ss") & vbCrLf & sql & vbCrLf & result)
+        Catch ex As Exception
+            ' File.WriteAllText("d:\user_bp_table.txt", ex.ToString())
+        End Try
+    End Sub
 
     Private Function HandleQoEVideoInfo(qoe As QoEVideoInfo) As QoEVideoInfo
         If qoe.ISUPLOADDATATIMELY = -1 Then
             '离线数据
             qoe.ISUPLOADDATATIMELY = 0
             If qoe.DATETIME = "" Then qoe.DATETIME = Now.ToString("yyyy-MM-dd HH:mm:ss")
+            qoe.LOCALDATASAVETIME = qoe.DATETIME
         Else
             '实时数据
             qoe.ISUPLOADDATATIMELY = 1
@@ -1066,10 +1202,10 @@ Public Class HTTPHandle
             Dim lat As Double = qoe.pi.lat
             Dim bdlon, bdlat, gdlon, gdlat As Double
             If lon > 0 And lat > 0 Then
-                Dim c As CoordInfo = GPS2BDS(lon, lat)
-                bdlon = c.x
-                bdlat = c.y
-                c = GPS2GDS(lon, lat)
+                'Dim c As CoordInfo = GPS2BDS(lon, lat)
+                'bdlon = c.x
+                'bdlat = c.y
+                Dim c As CoordInfo = GPS2GDS(lon, lat)
                 gdlon = c.x
                 gdlat = c.y
                 If True Then
@@ -1145,10 +1281,10 @@ Public Class HTTPHandle
         If qoe.VIDEO_TOTAL_TIME > 0 Then qoe.BVRATE = 100 * qoe.VIDEO_BUFFER_TOTAL_TIME / qoe.VIDEO_TOTAL_TIME
         Dim Video_LOAD_Score As Single = GetVideo_LOAD_Score(qoe.VIDEO_BUFFER_INIT_TIME, qoe.VIDEO_BUFFER_TOTAL_TIME, qoe.VIDEO_TOTAL_TIME)
         Dim Video_STALL_Score As Single = GetVideo_STALL_Score(qoe.VIDEO_STALL_TOTAL_TIME, qoe.VIDEO_STALL_NUM, qoe.VIDEO_TOTAL_TIME)
+
         qoe.VIDEO_BUFFER_TOTAL_SCORE = GetVideo_Buffer_Total_Score(qoe.BVRATE)
         qoe.VIDEO_LOAD_SCORE = Video_LOAD_Score
         qoe.VIDEO_STALL_SCORE = Video_STALL_Score
-
         qoe.VMOS = GetVMOS(Video_LOAD_Score, Video_STALL_Score)
         Return qoe
     End Function
@@ -1193,6 +1329,13 @@ Public Class HTTPHandle
         row("DATETIME") = qoe.DATETIME
         row("ISUPLOADDATATIMELY") = qoe.ISUPLOADDATATIMELY
         row("VMOS") = qoe.VMOS
+
+        row("EVMOS") = qoe.EVMOS
+        row("ERESPONSETIMESCORE") = qoe.ERESPONSETIMESCORE
+        row("ETOTALBUFFERTIMESCORE") = qoe.ETOTALBUFFERTIMESCORE
+        row("EWHITESCREENTIMESCORE") = qoe.EWHITESCREENTIMESCORE
+        row("HTTPURL") = qoe.HTTPURL
+
         row("RESPONSETIMESCORE") = qoe.RESPONSETIMESCORE
         row("TOTALBUFFERTIMESCORE") = qoe.TOTALBUFFERTIMESCORE
         row("DNSTIMESCORE") = qoe.DNSTIMESCORE
@@ -1245,10 +1388,10 @@ Public Class HTTPHandle
 
 
             If pi.lon > 0 And pi.lat > 0 Then
-                Dim c As CoordInfo = GPS2BDS(pi.lon, pi.lat)
-                row("BDLON".ToUpper) = c.x
-                row("BDLAT".ToUpper) = c.y
-                c = GPS2GDS(pi.lon, pi.lat)
+                'Dim c As CoordInfo = GPS2BDS(pi.lon, pi.lat)
+                'row("BDLON".ToUpper) = c.x
+                'row("BDLAT".ToUpper) = c.y
+                Dim c As CoordInfo = GPS2GDS(pi.lon, pi.lat)
                 row("GDLON".ToUpper) = c.x
                 row("GDLAT".ToUpper) = c.y
                 If True Then
@@ -1355,21 +1498,21 @@ Public Class HTTPHandle
         If stallCount = 3 Then Score = (Score + 2) / 2
         If stallCount > 3 Then Score = (Score + 1) / 2
 
-        Return Math.Floor(Score)
+        Return Math.Round(Score)
     End Function
     '缓存评分
     Private Function GetVideo_Buffer_Total_Score(BVRate As Double) As Integer
-        If BVRate < 10 Then Return 5
-        If BVRate < 30 Then Return 4
-        If BVRate < 50 Then Return 3
-        If BVRate < 70 Then Return 2
+        If BVRate <= 10 Then Return 5
+        If BVRate <= 30 Then Return 4
+        If BVRate <= 50 Then Return 3
+        If BVRate <= 70 Then Return 2
         Return 1
     End Function
     'VMOS 总评分
     Private Function GetVMOS(ByVal Video_LOAD_Score As Integer, ByVal Video_STALL_Score As Integer) As Single
         Dim d As Double = 0.5 * Video_LOAD_Score + 0.5 * Video_STALL_Score
         'Dim i As Single = Math.Ceiling(d)
-        Return Math.Floor(d)
+        Return Math.Round(d, 2)
     End Function
     'HTTP响应时间的评分
     Private Function GetQoEHttpResponseScore(responseRime As Long) As Integer
@@ -1614,9 +1757,9 @@ Public Class HTTPHandle
             Dim endTime As String = context.Request.QueryString("endTime")
             Dim readIndex As Integer = context.Request.QueryString("readIndex")
             Dim readCount As Integer = context.Request.QueryString("readCount")
+            Dim imei As String = context.Request.QueryString("imei")
             Dim grid As String = context.Request.QueryString("grid")
             Stepp = 1
-
             If carrier = "" Then
                 Return New NormalResponse(False, "必须选择运营商")
                 ' Return New NormalResponse(False, "必须选择省份")carrier,
@@ -1674,6 +1817,15 @@ Public Class HTTPHandle
                 End If
             End If
 
+            If imei <> "" Then
+                If doHaveWhere Then
+                    sql = sql & " and imei='" & imei & "'"
+                Else
+                    sql = sql & " where imei='" & imei & "'"
+                    doHaveWhere = True
+                End If
+            End If
+
             If startTime <> "" Then
                 If endTime <> "" Then
                     Try
@@ -1693,6 +1845,9 @@ Public Class HTTPHandle
                 Else
                     Return New NormalResponse(False, "缺少结束时间")
                 End If
+            End If
+            If imei <> "" Then
+
             End If
             sql = sql & "  order by datetime desc "
             If IsNothing(readIndex) = False Then
@@ -2239,6 +2394,7 @@ Public Class HTTPHandle
                     doHaveWhere = True
                 End If
             End If
+            'If district = "" Then district = "化州"
             If district <> "" Then
                 If doHaveWhere Then
                     sql = sql & " and district='" & district & "'"
@@ -3313,9 +3469,15 @@ Public Class HTTPHandle
         Dim isRand As Boolean
         Dim secondGrad As Long
         Dim wantType As String
+        Dim imsi As String
+        Dim qoe_total_times As Long
+        Dim qoe_total_E_times As Long
+        Dim qoe_today_times As Long
+        Dim qoe_today_E_times As Long
     End Structure
     '获取新视频资源 新版本
     Public Function Handle_GetNewQoEVideoInfo(context As HttpContext, data As Object, token As String) As NormalResponse
+        Dim startDate As Date = Now
         Try
             Dim isHaveOld As Boolean = False
             Dim str As String = ""
@@ -3338,8 +3500,8 @@ Public Class HTTPHandle
             Dim carrier As String = GetCarrierFromIp(ip)
             Dim sql As String = "select * from QOE_VIDEO_SOURCE where isuse=1"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-            If IsNothing(dt) Then Return New NormalResponse(False, "dt is null")
-            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "dt.rows.count=0")
+            If IsNothing(dt) Then Return New NormalResponse(False, "dt is null", GetTimeSpan(startDate), "")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "dt.rows.count=0", GetTimeSpan(startDate), "")
             Dim realList As New List(Of QoEVideoScouceInfo)
             For Each row As DataRow In dt.Rows
                 Dim tmp As New QoEVideoScouceInfo
@@ -3357,6 +3519,7 @@ Public Class HTTPHandle
             Next
             If qvi.wantType = "" Then qvi.wantType = "全部"
             Dim resultVideoInfo As New QoEVideoScouceInfo
+
             If isHaveOld Then
                 If qvi.wantType <> "全部" Then
                     Dim tmpList As List(Of QoEVideoScouceInfo) = (From s In realList Where s.type = qvi.wantType Select s).ToList()
@@ -3392,28 +3555,60 @@ Public Class HTTPHandle
             If carrier = "移动" Then
                 resultVideoInfo.url = resultVideoInfo.url.Replace("221.238.40.153:7062", "111.53.74.132")
             End If
+            If IsNothing(qvi.imsi) = False AndAlso qvi.imsi <> "" Then
+                sql = "select QOE_TOTAL_time,QOE_TOTAL_E_time,QOE_TODAY_time,QOE_TODAY_E_time from user_bp_table where imsi='" & qvi.imsi & "'"
+                dt = ORALocalhost.SqlGetDT(sql)
+                If IsNothing(dt) = False Then
+                    If dt.Rows.Count > 0 Then
+                        Dim row As DataRow = dt.Rows(0)
+                        Try
+                            resultVideoInfo.qoe_total_times = Val(row("QOE_TOTAL_time").ToString)
+                            resultVideoInfo.qoe_total_E_times = Val(row("QOE_TOTAL_E_time").ToString)
+                            resultVideoInfo.qoe_today_times = Val(row("QOE_TODAY_time").ToString)
+                            resultVideoInfo.qoe_today_E_times = Val(row("QOE_TODAY_E_time").ToString)
+                        Catch ex As Exception
+
+                        End Try
+                    End If
+                End If
+                Task.Run(Sub()
+                             Dim askUrl As String = resultVideoInfo.url
+                             Dim imsi As String = qvi.imsi
+                             Dim isExit As Boolean = ORALocalhost.SqlIsIn("select id from user_bp_table where imsi='" & imsi & "'")
+                             If isExit Then
+                                 sql = "update user_bp_table set lastAskvideoUrl='{0}' where imsi='{1}'"
+                                 sql = String.Format(sql, askUrl, imsi)
+                             Else
+                                 sql = "insert into user_bp_table(dateTime,lastAskvideoUrl,imsi) values('{0}','{1}','{2}')"
+                                 sql = String.Format(sql, Now.ToString("yyyy-MM-dd HH:mm:ss"), askUrl, imsi)
+                             End If
+                             ORALocalhost.SqlCMD(sql)
+                         End Sub)
+            End If
             realList = Nothing
-            Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, resultVideoInfo)
+            resultVideoInfo.imsi = qvi.imsi
+            resultVideoInfo.wantType = qvi.wantType
+            Return New NormalResponse(True, "ip=" & ip & ";carrier=" & carrier, GetTimeSpan(startDate), resultVideoInfo)
         Catch ex As Exception
-            Return New NormalResponse(False, ex.ToString)
+            Return New NormalResponse(False, ex.ToString, GetTimeSpan(startDate), "")
         End Try
     End Function
+
     '获取一键测试地址
     Public Function Handle_GetOneKeyTestUrl(context As HttpContext) As NormalResponse
         Try
             Dim ip As String = context.Request.UserHostAddress
             Dim carrier As String = GetCarrierFromIp(ip)
-            Dim url As String = "http://221.238.40.153:7062/video/720P_30s_DY__clip1.mp4"
-            url = "http://221.238.40.153:7062/video/720P_30s_DY__clip215.mp4"
-            Dim sql As String = "select url,filesize,VIDEOSECOND from QOE_VIDEO_SOURCE WHERE FILESIZEM>2 and  FILESIZEM<3 "
-            sql = OracleSelectPage(sql, 0, 1)
-            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-            If IsNothing(dt) = False Then
-                If dt.Rows.Count > 0 Then
-                    Dim row As DataRow = dt.Rows(0)
-                    url = row("url".ToUpper).ToString
-                End If
-            End If
+            Dim url As String = "http://221.238.40.153:7062/video/OneKeyTestVideo/zongyi1_30s_360p_162.mp4"
+            'Dim sql As String = "select url,filesize,VIDEOSECOND from QOE_VIDEO_SOURCE WHERE FILESIZEM>2 and  FILESIZEM<3 "
+            'sql = OracleSelectPage(sql, 0, 1)
+            'Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            'If IsNothing(dt) = False Then
+            '    If dt.Rows.Count > 0 Then
+            '        Dim row As DataRow = dt.Rows(0)
+            '        url = row("url".ToUpper).ToString
+            '    End If
+            'End If
             If carrier = "移动" Then
                 url = url.Replace("221.238.40.153:7062", "111.53.74.132")
             End If
@@ -3432,23 +3627,22 @@ Public Class HTTPHandle
         Try
             Dim ip As String = context.Request.UserHostAddress
             Dim carrier As String = GetCarrierFromIp(ip)
-            Dim url As String = "http://221.238.40.153:7062/video/720P_30s_DY__clip1.mp4"
-            url = "http://221.238.40.153:7062/video/720P_30s_DY__clip215.mp4"
+            Dim url As String = "http://221.238.40.153:7062/video/OneKeyTestVideo/zongyi1_30s_360p_162.mp4"
             Dim info As New OneKeyTestUrlInfo
             info.url = url
-            info.filesize = 2410306
+            info.filesize = 2097522
             info.videoSecond = 30
-            Dim sql As String = "select url,filesize,VIDEOSECOND from QOE_VIDEO_SOURCE WHERE FILESIZEM>2 and  FILESIZEM<3 "
-            sql = OracleSelectPage(sql, 0, 1)
-            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
-            If IsNothing(dt) = False Then
-                If dt.Rows.Count > 0 Then
-                    Dim row As DataRow = dt.Rows(0)
-                    url = row("url".ToUpper).ToString()
-                    info.filesize = Val(row("filesize".ToString).ToString())
-                    info.videoSecond = Val(row("VIDEOSECOND".ToString).ToString())
-                End If
-            End If
+            'Dim sql As String = "select url,filesize,VIDEOSECOND from QOE_VIDEO_SOURCE WHERE FILESIZEM>2 and  FILESIZEM<3 "
+            'sql = OracleSelectPage(sql, 0, 1)
+            'Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            'If IsNothing(dt) = False Then
+            '    If dt.Rows.Count > 0 Then
+            '        Dim row As DataRow = dt.Rows(0)
+            '        url = row("url".ToUpper).ToString()
+            '        info.filesize = Val(row("filesize".ToString).ToString())
+            '        info.videoSecond = Val(row("VIDEOSECOND".ToString).ToString())
+            '    End If
+            'End If
             If carrier = "移动" Then
                 url = url.Replace("221.238.40.153:7062", "111.53.74.132")
             End If
@@ -3582,7 +3776,7 @@ Public Class HTTPHandle
             Dim appFileName As String = appPath & appName
             Dim appVersionFileName As String = appPath & "version.txt"
             If File.Exists(appVersionFileName) = False Then
-                Return New NormalResponse(False, "服务器没有改app的升级信息，请联系管理员")
+                Return New NormalResponse(False, "服务器没有该app的升级信息，请联系管理员,app名称为" & appName)
             End If
             Dim appVersion As String = File.ReadAllText(appVersionFileName)
             Try
@@ -3717,7 +3911,7 @@ Public Class HTTPHandle
             Dim passWord As String = context.Request.QueryString("pwd")
             If account = "" Then Return New NormalResponse(False, "用户名为空")
             If passWord = "" Then Return New NormalResponse(False, "密码为空")
-            Dim sql As String = "select password,token,userName from user_Account where userName='" & account & "' and state<>0"
+            Dim sql As String = "select password,token,userName,power,state from user_Account where userName='" & account & "' and state<>0"
             Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
             If IsNothing(dt) Then Return New NormalResponse(False, "该用户不存在")
             If dt.Rows.Count = 0 Then Return New NormalResponse(False, "该用户不存在")
@@ -3725,12 +3919,14 @@ Public Class HTTPHandle
             Dim OraPwd As String = row("password".ToUpper).ToString
             Dim OraToken As String = row("token".ToUpper).ToString
             Dim oraName As String = row("userName".ToUpper).ToString
+            Dim power As Integer = Val(row("power".ToUpper).ToString)
+            Dim state As Integer = Val(row("state".ToUpper).ToString)
             If IsDBNull(OraToken) Then OraToken = ""
             If OraPwd = passWord Then
                 If OraToken = "" Then
                     OraToken = GetNewToken(account, True)
                 End If
-                Dim linfo As New loginInfo(account, oraName, OraToken)
+                Dim linfo As New loginInfo(account, oraName, OraToken, power, state)
                 Return New NormalResponse(True, "success", "", linfo)
             Else
                 Return New NormalResponse(False, "用户名或密码错误", "", "")
@@ -3945,6 +4141,65 @@ Public Class HTTPHandle
             If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有任何记录")
             Dim row As DataRow = dt.Rows(0)
             Return New NormalResponse(True, "", "", row)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    '用户查询积分
+    Public Function Handle_GetMyBonusPoints(context As HttpContext) As NormalResponse
+        Try
+            Dim imsi As String = context.Request.QueryString("imsi")
+            If IsNothing(imsi) Then Return New NormalResponse(False, "imsi不可为空")
+            If imsi = "" Then Return New NormalResponse(False, "imsi不可为空")
+            Dim sql As String = "select * from user_bp_table where imsi='" & imsi & "'"
+            Dim dt As DataTable = ORALocalhost.SqlGetDT(sql)
+            If IsNothing(dt) Then Return New NormalResponse(False, "没有您的积分记录")
+            If dt.Rows.Count = 0 Then Return New NormalResponse(False, "没有您的积分记录")
+            Dim row As DataRow = dt.Rows(0)
+            Dim bonusPoints As String = row("bonusPoints".ToUpper()).ToString()
+            Dim bp As Single = 0
+            Single.TryParse(bonusPoints, bp)
+            Return New NormalResponse(True, "", "", bp.ToString("0.0"))
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString())
+        End Try
+    End Function
+    'app获取ping地址
+    Public Function Handle_GetPingIP(context As HttpContext) As NormalResponse
+        Try
+            Dim ip As String = context.Request.UserHostAddress
+            Dim carrier As String = GetCarrierFromIp(ip)
+            Dim ping As String = "221.238.40.153"
+            If carrier = "移动" Then
+                ping = "111.53.74.132"
+            End If
+            Return New NormalResponse(True, "ip=" & ip, "carrier=" & carrier, ping)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    'app在登录时候获取aid
+    Public Function Handle_GetAid(context As HttpContext) As NormalResponse
+        Try
+            Dim imsi As String = context.Request.QueryString("imsi")
+            Dim imei As String = context.Request.QueryString("imei")
+            If IsNothing(imsi) Then Return New NormalResponse(False, "imsi不可为空")
+            If IsNothing(imei) Then Return New NormalResponse(False, "imei不可为空")
+            Dim aid As String = DeviceHelper.HandleImeiAndUid(imsi)
+            Return New NormalResponse(True, "", "", aid)
+        Catch ex As Exception
+            Return New NormalResponse(False, ex.ToString)
+        End Try
+    End Function
+    'app获取视频分类列表
+    Public Function Handle_GetQoEVideoSourceTypeList(context As HttpContext) As NormalResponse
+        Try
+            Dim dt As DataTable = ORALocalhost.SqlGetDT("select type from QOE_VIDEO_SOURCE group by type")
+            Dim list As New List(Of String)
+            list.Add("全部")
+            Dim tmpList = (From d In dt.AsEnumerable() Select d.Field(Of String)("type")).ToList()
+            list.AddRange(tmpList)
+            Return New NormalResponse(True, "", "", list)
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString)
         End Try

@@ -1,5 +1,11 @@
 ﻿Public Class QoEHTTPInfo
     Public DATETIME As String
+    Public EVMOS As Integer
+    Public ERESPONSETIMESCORE As Integer
+    Public ETOTALBUFFERTIMESCORE As Integer
+    Public EWHITESCREENTIMESCORE As Integer
+    Public HTTPURL As String
+
     Public VMOS As Integer
     Public RESPONSETIMESCORE As Integer
     Public TOTALBUFFERTIMESCORE As Integer

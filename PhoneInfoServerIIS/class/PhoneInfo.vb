@@ -1,5 +1,6 @@
 ﻿
 Public Class PhoneInfo
+    Public AID As String
     Public RID As String
     Public DATETIME As String
     Public businessType As String
@@ -59,4 +60,9 @@ Public Class PhoneInfo
     Public bdlat As Double
     Public gdlon As Double
     Public gdlat As Double
+
+    Public VMOS As Integer
+    Public HTTP_URL As String
+    Public HTTP_RESPONSE_TIME As Long
+    Public HTTP_BUFFERSIZE As Long
 End Class

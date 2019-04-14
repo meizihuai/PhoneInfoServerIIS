@@ -1,18 +1,40 @@
-﻿Public Class NormalResponse
+﻿Imports System
+Imports System.Collections.Generic
+Imports System.Linq
+Imports System.Web
+
+Public Class NormalResponse
     Public result As Boolean
     Public msg As String
     Public errmsg As String
     Public data As Object
-    Sub New(ByVal _result As Boolean, ByVal _msg As String, ByVal _errmsg As String, ByVal _data As Object) '基本构造函数() As _errmsg,string
-        result = _result
-        msg = _msg
-        errmsg = _errmsg
-        data = _data
+
+    Public Sub New()
     End Sub
-    Sub New(ByVal _result As Boolean, ByVal _msg As String) '重载构造函数，为了方便写new,很多时候，只需要一个结果和一个参数() As _result,string
-        result = _result
-        msg = _msg
-        errmsg = ""
-        data = ""
+
+    Public Sub New(ByVal result As Boolean, ByVal msg As String, ByVal errmsg As String, ByVal data As Object)
+        Me.result = result
+        Me.msg = msg
+        Me.errmsg = errmsg
+        Me.data = data
+    End Sub
+
+    Public Sub New(ByVal result As Boolean, ByVal msg As String)
+        Me.result = result
+        Me.msg = msg
+        Me.errmsg = ""
+        Me.data = ""
+    End Sub
+
+    Public Sub New(ByVal msg As String)
+        Me.result = False
+
+        If msg = "success" Then
+            Me.result = True
+        End If
+
+        Me.msg = msg
+        Me.errmsg = ""
+        Me.data = ""
     End Sub
 End Class

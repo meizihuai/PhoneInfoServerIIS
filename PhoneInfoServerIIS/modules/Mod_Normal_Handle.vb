@@ -21,7 +21,7 @@ Module Mod_Normal_Handle
     Public pgSQLLocalhost As New PgSQLHelper("localhost", 5432, "PhoneInfo", "mzh", "Smart9080")
     ' Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
     Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
-    Public apiVersion As String = "2.0.3"
+    Public apiVersion As String = "2.0.4"
     Structure normalResponse 'json回复格式
         Public result As Boolean
         Public msg As String
@@ -44,10 +44,14 @@ Module Mod_Normal_Handle
         Dim usr As String
         Dim name As String
         Dim token As String
-        Sub New(usr As String, name As String, token As String)
+        Dim power As Integer
+        Dim state As Integer
+        Sub New(usr As String, name As String, token As String, power As Integer, state As Integer)
             Me.usr = usr
             Me.name = name
             Me.token = token
+            Me.power = power
+            Me.state = state
         End Sub
     End Structure
     Public Function GetOraTableColumns(tableName As String) As String()
