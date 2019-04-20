@@ -715,11 +715,12 @@ Public Class HTTPHandle
         Try
             '修改设备表 设备的经纬度等参数信息
             Dim th As New Thread(Sub()
+                                     ' LogHelper.Log($"ChangeDeviceStatus aid={pi.AID},start")
                                      DeviceHelper.ChangeDeviceStatus(pi)
                                  End Sub)
             th.Start()
         Catch ex As Exception
-
+            ' LogHelper.Log($"ChangeDeviceStatus aid={pi.AID},err={ex.ToString()}")
         End Try
         Try
             '修改任务表 任务最后数据时间等，任务监控模块告警生成
@@ -1048,9 +1049,10 @@ Public Class HTTPHandle
         row("PCI".ToUpper) = qoe.pi.PCI
         row("APKNAME".ToUpper) = qoe.APKNAME
         dt.Rows.Add(row)
-        Task.Run(Sub()
-                     HandleUserBonusPoints(qoe)
-                 End Sub)
+        HandleUserBonusPoints(qoe)
+        'Task.Run(Sub()
+
+        '         End Sub)
         Task.Run(Sub()
                      QoEVideoDtGroupMember.OnUpdateQoEVideoInfo(qoe)
                  End Sub)
@@ -3458,6 +3460,7 @@ Public Class HTTPHandle
         End Try
     End Function
     Structure QoEVideoScouceInfo
+        Dim id As Long
         Dim name As String
         Dim url As String
         Dim fileSize As String
@@ -3505,6 +3508,7 @@ Public Class HTTPHandle
             Dim realList As New List(Of QoEVideoScouceInfo)
             For Each row As DataRow In dt.Rows
                 Dim tmp As New QoEVideoScouceInfo
+                tmp.id = row("id".ToUpper)
                 tmp.name = row("name".ToUpper)
                 tmp.url = row("url".ToUpper)
                 tmp.fileSize = row("fileSize".ToUpper)
@@ -3519,7 +3523,6 @@ Public Class HTTPHandle
             Next
             If qvi.wantType = "" Then qvi.wantType = "全部"
             Dim resultVideoInfo As New QoEVideoScouceInfo
-
             If isHaveOld Then
                 If qvi.wantType <> "全部" Then
                     Dim tmpList As List(Of QoEVideoScouceInfo) = (From s In realList Where s.type = qvi.wantType Select s).ToList()
@@ -3573,14 +3576,16 @@ Public Class HTTPHandle
                 End If
                 Task.Run(Sub()
                              Dim askUrl As String = resultVideoInfo.url
+                             Dim id As Long = resultVideoInfo.id
                              Dim imsi As String = qvi.imsi
+                             Dim nowTime As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
                              Dim isExit As Boolean = ORALocalhost.SqlIsIn("select id from user_bp_table where imsi='" & imsi & "'")
                              If isExit Then
-                                 sql = "update user_bp_table set lastAskvideoUrl='{0}' where imsi='{1}'"
-                                 sql = String.Format(sql, askUrl, imsi)
+                                 sql = "update user_bp_table set lastAskvideoUrl='{0}',lastAskVideo_ID='{1}',lastaskVideoTime='{2}',isPlayingVideo=1  where imsi='{3}'"
+                                 sql = String.Format(sql, askUrl, id, nowTime, imsi)
                              Else
-                                 sql = "insert into user_bp_table(dateTime,lastAskvideoUrl,imsi) values('{0}','{1}','{2}')"
-                                 sql = String.Format(sql, Now.ToString("yyyy-MM-dd HH:mm:ss"), askUrl, imsi)
+                                 sql = "insert into user_bp_table(dateTime,lastAskvideoUrl,imsi,aid,lastaskVideoTime) values('{0}','{1}','{2}','{3}','{4}')"
+                                 sql = String.Format(sql, nowTime, askUrl, imsi, GetAIDByImsi(imsi), nowTime)
                              End If
                              ORALocalhost.SqlCMD(sql)
                          End Sub)
@@ -3592,6 +3597,11 @@ Public Class HTTPHandle
         Catch ex As Exception
             Return New NormalResponse(False, ex.ToString, GetTimeSpan(startDate), "")
         End Try
+    End Function
+    Private Function GetAIDByImsi(imsi As String) As String
+        Dim dt As DataTable = ORALocalhost.SqlGetDT($"select aid from deviceTable where imsi='{imsi}'")
+        If IsNothing(dt) OrElse dt.Rows.Count = 0 Then Return ""
+        Return dt.Rows(0)(0).ToString()
     End Function
 
     '获取一键测试地址

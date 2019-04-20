@@ -14,14 +14,16 @@ Imports System.Web
 Imports System.Threading
 Imports System.Threading.Thread
 Imports System.IO.Compression
+Imports System.Web.Configuration.WebConfigurationManager
 
 Module Mod_Normal_Handle
     Public myServerUrl As String = "http://111.53.74.132:7062"
     Public ConnectSQL As String = "server=localhost;DataBase=PhoneInfo;User ID=root;Pwd=Smart9080;charset='utf8'"
     Public pgSQLLocalhost As New PgSQLHelper("localhost", 5432, "PhoneInfo", "mzh", "Smart9080")
     ' Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
-    Public ORALocalhost As New OracleHelper("localhost", 1521, "oss", "uplan", "Smart9080")
-    Public apiVersion As String = "2.0.4"
+    'Public ORALocalhost As New OracleHelper(AppSettings("oraIp"), AppSettings("oraPort"), AppSettings("oraServerName"), AppSettings("oraUsr"), AppSettings("oraPwd"))
+    Public ORALocalhost As New OracleHelper(AppSettings("oraHelperCfg"))
+    Public apiVersion As String = "2.0.5"
     Structure normalResponse 'json回复格式
         Public result As Boolean
         Public msg As String

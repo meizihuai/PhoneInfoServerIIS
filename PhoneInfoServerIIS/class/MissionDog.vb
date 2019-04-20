@@ -38,8 +38,8 @@ Public Class MissionDog
             Try
                 WatchingWork()
             Catch ex As Exception
-                Dim path As String = "d:\WatchingDogErr.txt"
-                File.WriteAllText(path, ex.ToString)
+                'Dim path As String = "d:\WatchingDogErr.txt"
+                'File.WriteAllText(path, ex.ToString)
             End Try
             Sleep(1000 * sleepSecond)
         End While

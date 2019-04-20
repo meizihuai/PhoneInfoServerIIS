@@ -67,9 +67,11 @@ Public Class DeviceHelper
         Dim time As String = Now.ToString("yyyy-MM-dd HH:mm:ss")
         Dim sql As String = "select * from deviceTable where aid='" & pi.AID & "'"
         Dim isExist As Boolean = ORALocalhost.SqlIsIn(sql)
+        'LogHelper.Log($"ChangeDeviceStatus aid={pi.AID},isExist={isExist}")
+        'File.AppendAllText("d:\error", $"ChangeDeviceStatus aid={pi.AID},isExist={isExist}" & Environment.NewLine)
         If isExist Then
             sql = "update deviceTable set {0} GroupId='{1}',lastDateTime='{2}',isBusy='{3}',
-                   province='{4}',city='{5}',district='{6}',lon='{7}',lat='{8}',bdlon='{9}',bdlat='{10}',gdlon='{11}',gdlat='{12}',apkVersion='{13}',imei='{14}',imsi='{15}' where aid='" & pi.AID & "'"
+                   province='{4}',city='{5}',district='{6}',lon='{7}',lat='{8}',bdlon='{9}',bdlat='{10}',gdlon='{11}',gdlat='{12}',apkVersion='{13}',imei='{14}',imsi='{15}',isOnline=1,carrier='{16}' where aid='" & pi.AID & "'"
             Dim list As New List(Of String)
             list.Add("") 'userName
             list.Add("") 'groupId
@@ -87,11 +89,14 @@ Public Class DeviceHelper
             list.Add(pi.apkVersion)
             list.Add(pi.IMEI)
             list.Add(pi.IMSI)
+            list.Add(pi.carrier)
             sql = String.Format(sql, list.ToArray())
             Dim result As String = ORALocalhost.SqlCMD(sql)
+            '  LogHelper.Log($"ChangeDeviceStatus aid={pi.AID},result={result}")
+            ' File.AppendAllText("d:\error", $"ChangeDeviceStatus aid={pi.AID},result={result}" & Environment.NewLine)
         Else
-            sql = "insert into deviceTable (DateTime,userName,imei,GroupId,lastDateTime,isBusy,province,city,district,lon,lat,bdlon,bdlat,gdlon,gdlat,power,PHONEMODEL,apkVersion,imsi,aid) values ('{0}','{1}','{2}','{3}','{4}',
-                    '{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}','{18}','{19}')"
+            sql = "insert into deviceTable (DateTime,userName,imei,GroupId,lastDateTime,isBusy,province,city,district,lon,lat,bdlon,bdlat,gdlon,gdlat,power,PHONEMODEL,apkVersion,imsi,aid,isOnline,carrier) values ('{0}','{1}','{2}','{3}','{4}',
+                    '{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}','{15}','{16}','{17}','{18}','{19}',1,'{20}')"
             Dim list As New List(Of String)
             list.Add(time)
             list.Add("") 'userName
@@ -113,16 +118,20 @@ Public Class DeviceHelper
             list.Add(pi.apkVersion)
             list.Add(pi.IMSI)
             list.Add(GetNewAid())
+            list.Add(pi.carrier)
             sql = String.Format(sql, list.ToArray())
             Dim result As String = ORALocalhost.SqlCMD(sql)
+            '  LogHelper.Log($"ChangeDeviceStatus aid={pi.AID},result={result}")
+
+            ' File.AppendAllText("d:\error", $"ChangeDeviceStatus aid={pi.AID},result={result}" & Environment.NewLine)
         End If
     End Sub
     Private Shared Function GetNewAid() As String
         While True
             Dim aid As String = System.Guid.NewGuid().ToString("N").Substring(0, 6)
-            Dim sql As String = "select id from devicelog where aid='" & aid & "'"
             If Regex.IsMatch(aid, "[A-Za-z].*[0-9]|[0-9].*[A-Za-z]") Then
-                If ORALocalhost.SqlIsIn(sql) = False Then
+                Dim sql As String = "select id from devicelog where aid='" & aid & "'"
+                If ORALocalhost.SqlIsIn(Sql) = False Then
                     Return aid
                 End If
             End If

@@ -7,6 +7,7 @@ Public Class Global_asax
 
     Sub Application_Start(ByVal sender As Object, ByVal e As EventArgs)
         ' 应用程序启动时激发
+        LogHelper.Log($"=========PhoneInfo IIS Server 启动=========")
         MissionDog.StartWatching()
     End Sub
 
@@ -33,6 +34,7 @@ Public Class Global_asax
 
     Sub Application_End(ByVal sender As Object, ByVal e As EventArgs)
         ' 应用程序结束时激发
+        LogHelper.Log($"=========PhoneInfo IIS Server 关闭=========")
         MissionDog.StopWatching()
     End Sub
 

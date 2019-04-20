@@ -18,6 +18,20 @@ Public Class OracleHelper
         NKConnectString = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={0})(PORT={1}))(CONNECT_DATA=(SERVICE_NAME={2})));Persist Security Info=True;User ID={3};Password={4};"
         NKConnectString = String.Format(NKConnectString, New String() {ip, port & "", seviceName, usr, pwd})
     End Sub
+    Public Sub New(cfg As String)
+        Dim st() As String = cfg.Split(";")
+        If st.Length < 5 Then
+            Throw New Exception("ora配置字段无效")
+            Return
+        End If
+        Dim ip As String = st(0)
+        Dim port As String = st(1)
+        Dim seviceName As String = st(2)
+        Dim usr As String = st(3)
+        Dim pwd As String = st(4)
+        NKConnectString = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST={0})(PORT={1}))(CONNECT_DATA=(SERVICE_NAME={2})));Persist Security Info=True;User ID={3};Password={4};"
+        NKConnectString = String.Format(NKConnectString, New String() {ip, port, seviceName, usr, pwd})
+    End Sub
 
     Structure OracleParaList
         Public dataList As List(Of String)
